@@ -1,11 +1,4 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="public/pingloop-wide-dark.svg" />
-    <img src="public/pingloop-wide-light.svg" alt="PingLoop" width="640" />
-  </picture>
-</p>
-
-<p align="center">
   <img src="docs/screenshot.png" alt="PingLoop running a 5 minute timer" width="320" />
 </p>
 
