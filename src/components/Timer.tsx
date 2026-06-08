@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useStore } from "../state";
 import { remainingAt } from "../timer";
 import { formatDuration } from "../format";
 
-const INTERVALS_MIN = [5, 10, 15, 30, 55];
-const MAX_CUSTOM_MIN = 600;
+const MIN_MINUTES = 5;
+const MAX_MINUTES = 120;
+const STEP_MINUTES = 5;
+
+const OPTIONS: number[] = [];
+for (let m = MIN_MINUTES; m <= MAX_MINUTES; m += STEP_MINUTES) OPTIONS.push(m);
 
 // Ring geometry. The radius drives the dash length below.
 const RADIUS = 45;
@@ -19,20 +23,12 @@ export function Timer() {
   const fraction = timer.durationMs > 0 ? remaining / timer.durationMs : 0;
 
   const currentMin = Math.round(timer.durationMs / 60000);
-  const isCustom = !INTERVALS_MIN.includes(currentMin);
-  const [customOpen, setCustomOpen] = useState(false);
-  const [customText, setCustomText] = useState("");
-
-  function chooseCustom() {
-    setCustomText(isCustom ? String(currentMin) : "");
-    setCustomOpen(true);
-  }
-
-  function onCustomInput(value: string) {
-    setCustomText(value);
-    const minutes = clampMinutes(value);
-    if (minutes) selectInterval(minutes * 60000);
-  }
+  // A saved value might not be on the list (for example an older value). Show
+  // the nearest option and snap the stored duration to match.
+  const selectedMin = OPTIONS.includes(currentMin) ? currentMin : nearestOption(currentMin);
+  useEffect(() => {
+    if (selectedMin !== currentMin) selectInterval(selectedMin * 60000);
+  }, [selectedMin, currentMin, selectInterval]);
 
   return (
     <section className="timer card">
@@ -59,47 +55,20 @@ export function Timer() {
         </div>
       </div>
 
-      <div className="intervals" role="group" aria-label="Timer length">
-        {INTERVALS_MIN.map((min) => {
-          const ms = min * 60 * 1000;
-          return (
-            <button
-              key={min}
-              className={timer.durationMs === ms ? "interval active" : "interval"}
-              aria-pressed={timer.durationMs === ms}
-              onClick={() => {
-                selectInterval(ms);
-                setCustomOpen(false);
-              }}
-            >
-              {min}
-            </button>
-          );
-        })}
-        <button
-          className={isCustom ? "interval custom active" : "interval custom"}
-          aria-pressed={isCustom}
-          onClick={chooseCustom}
+      <div className="length-row">
+        <select
+          className="minutes-select"
+          value={String(selectedMin)}
+          aria-label="Timer length in minutes"
+          onChange={(e) => selectInterval(Number(e.target.value) * 60000)}
         >
-          Custom
-        </button>
+          {OPTIONS.map((m) => (
+            <option key={m} value={m}>
+              {m} minutes
+            </option>
+          ))}
+        </select>
       </div>
-
-      {customOpen && (
-        <div className="custom-row">
-          <input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={MAX_CUSTOM_MIN}
-            value={customText}
-            placeholder="20"
-            autoFocus
-            onChange={(e) => onCustomInput(e.target.value)}
-          />
-          <span>minutes</span>
-        </div>
-      )}
 
       <div className="repeat-row">
         <span>Repeat</span>
@@ -121,9 +90,9 @@ export function Timer() {
   );
 }
 
-/** Parse a minutes string to a clamped integer, or 0 when invalid. */
-function clampMinutes(value: string): number {
-  const n = Math.floor(Number(value));
-  if (!Number.isFinite(n) || n < 1) return 0;
-  return Math.min(MAX_CUSTOM_MIN, n);
+function nearestOption(min: number): number {
+  return OPTIONS.reduce(
+    (best, m) => (Math.abs(m - min) < Math.abs(best - min) ? m : best),
+    MIN_MINUTES,
+  );
 }
