@@ -15,7 +15,7 @@ crons = ["* * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "pingloop"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "d01c1e16-785d-4d0c-99f3-1abbad24a96c"
 
 [vars]
 # The exact origin of your deployed frontend, used for CORS.
@@ -23,4 +23,4 @@ ALLOWED_ORIGIN = "https://petervanlunteren.github.io"
 # VAPID subject: a contact mailto or https URL for your deployment.
 VAPID_SUBJECT = "mailto:peter@addaxdatascience.com"
 # VAPID public key. Safe to expose; must match the frontend VITE_VAPID_PUBLIC_KEY.
-VAPID_PUBLIC_KEY = "REPLACE_WITH_YOUR_VAPID_PUBLIC_KEY"
+VAPID_PUBLIC_KEY = "BDEZyG9z6wjYrYP4AsL-eNFreEFdP8zzNyklalib2NWP7VOzX87ln8r-9-jMk2WdeqEF_BJW359WAdzd_JFrfxU"
