@@ -108,9 +108,11 @@ async function fireRow(row: ScheduleRow, env: Env, now: number): Promise<void> {
   let status: number;
   try {
     status = await sendPush(subscription, { title: row.title, body: row.body }, env);
-  } catch {
+  } catch (err) {
     status = 0; // network error, treat as a transient failure
+    console.log(`push error host=${hostOf(row.endpoint)} err=${String(err)}`);
   }
+  console.log(`push host=${hostOf(row.endpoint)} status=${status} repeat=${row.repeat}`);
 
   const gone = status === 404 || status === 410;
   const sent = status >= 200 && status < 300;
@@ -129,6 +131,14 @@ async function fireRow(row: ScheduleRow, env: Env, now: number): Promise<void> {
   await env.DB.prepare("UPDATE schedules SET attempts = attempts + 1 WHERE id = ?")
     .bind(row.id)
     .run();
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return "unknown";
+  }
 }
 
 async function hashEndpoint(endpoint: string): Promise<string> {
