@@ -53,6 +53,12 @@ describe("remainingAt", () => {
     expect(remainingAt(makeTimer(), 999_999)).toBe(THIRTY_MIN);
     expect(remainingAt(markFinished(makeTimer()), 999_999)).toBe(0);
   });
+
+  it("never exceeds the duration when the display clock lags the start", () => {
+    // Started at t=1000, but the display clock is still at t=500 (stale).
+    const running = start(makeTimer(), 1000);
+    expect(remainingAt(running, 500)).toBe(THIRTY_MIN);
+  });
 });
 
 describe("isFinished", () => {

@@ -76,7 +76,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     selectInterval: (durationMs) => dispatch({ type: "select", durationMs }),
     toggle: () => {
       unlockAudio();
-      dispatch({ type: "toggle", now: Date.now() });
+      // Use one timestamp for both the new end time and the display clock, so
+      // the countdown starts exactly at the full interval with no lag jump.
+      const ts = Date.now();
+      setNow(ts);
+      dispatch({ type: "toggle", now: ts });
     },
   };
 

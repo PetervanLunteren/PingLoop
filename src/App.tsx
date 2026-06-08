@@ -2,7 +2,7 @@ import { StoreProvider } from "./state";
 import { PermissionSetup } from "./components/PermissionSetup";
 import { Timer } from "./components/Timer";
 
-const logo = `${import.meta.env.BASE_URL}pingloop-wide-v2.svg`;
+const logo = `${import.meta.env.BASE_URL}pingloop-wide-dark.svg`;
 
 export function App() {
   return (

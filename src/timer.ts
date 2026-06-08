@@ -23,10 +23,14 @@ export function markFinished(timer: TimerState): TimerState {
   return { ...timer, status: "finished", endsAt: null };
 }
 
-/** Milliseconds left right now, derived from `endsAt` while running. */
+/**
+ * Milliseconds left right now, derived from `endsAt` while running. Clamped to
+ * [0, durationMs] so a display clock that lags the real start time can never
+ * show more than the full interval.
+ */
 export function remainingAt(timer: TimerState, now: number): number {
   if (timer.status === "running" && timer.endsAt !== null) {
-    return Math.max(0, timer.endsAt - now);
+    return Math.min(timer.durationMs, Math.max(0, timer.endsAt - now));
   }
   if (timer.status === "finished") return 0;
   return timer.durationMs;
