@@ -12,6 +12,11 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      // We ship our own service worker (src/sw.ts) so it can handle push events.
+      // vite-plugin-pwa still injects the Workbox precache manifest into it.
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
       registerType: "autoUpdate",
       // Icons are generated from public/pingloop-icon.svg by pwa-assets.config.ts
       // and injected into the manifest and the document head.
@@ -28,8 +33,7 @@ export default defineConfig({
         start_url: base,
         scope: base,
       },
-      workbox: {
-        cleanupOutdatedCaches: true,
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,svg,png,ico,webmanifest}"],
       },
     }),

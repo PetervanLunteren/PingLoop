@@ -6,6 +6,7 @@ import {
   type NotificationSupport,
 } from "../notify";
 import { playBeep, unlockAudio } from "../sound";
+import { pushEnabled } from "../push";
 
 /**
  * Opened from the header bell. Kept deliberately short: turn notifications on
@@ -52,6 +53,13 @@ export function NotificationDialog({
 
         {status !== "granted" && <EnableBlock status={status} onEnable={enable} />}
 
+        {pushEnabled && status === "granted" && (
+          <p className="note">
+            Background alerts are on. Your timer's end time is sent to the alert
+            server so it can reach you with the app closed.
+          </p>
+        )}
+
         <button className="btn btn-sm dialog-action" onClick={testPing}>
           Send test ping
         </button>
@@ -77,7 +85,11 @@ function EnableBlock({
   if (status === "default") {
     return (
       <>
-        <p className="note">Turn on notifications so the timer can alert you.</p>
+        <p className="note">
+          {pushEnabled
+            ? "Turn on notifications so the timer can alert you, even when PingLoop is closed."
+            : "Turn on notifications so the timer can alert you."}
+        </p>
         <button className="btn btn-primary btn-sm dialog-action" onClick={onEnable}>
           Turn on notifications
         </button>

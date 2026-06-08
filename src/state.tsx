@@ -15,6 +15,18 @@ import { loadTimer, saveTimer } from "./storage";
 import { isFinished, markFinished, setDuration, start, stop } from "./timer";
 import { showNotification } from "./notify";
 import { playBeep, unlockAudio } from "./sound";
+import { cancelBackground, scheduleBackground, type BackgroundAlert } from "./push";
+
+/** Build the background alert for a timer ending at `fireAt`. */
+function alertFor(timer: TimerState, fireAt: number): BackgroundAlert {
+  return {
+    fireAt,
+    title: "Timer finished",
+    body: timer.repeat ? "Starting the next round." : "Your countdown is done.",
+    repeat: timer.repeat,
+    intervalMs: timer.durationMs,
+  };
+}
 
 type Action =
   | { type: "select"; durationMs: number }
@@ -78,6 +90,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       } else {
         void showNotification("Timer finished", "Your countdown is done.");
         dispatch({ type: "finish" });
+        // We alerted in the foreground, so drop any pending background push.
+        void cancelBackground();
       }
     }
   }, [now, timer]);
@@ -85,16 +99,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const store: Store = {
     timer,
     now,
-    selectInterval: (durationMs) => dispatch({ type: "select", durationMs }),
+    selectInterval: (durationMs) => {
+      const wasRunning = timer.status === "running";
+      dispatch({ type: "select", durationMs });
+      // Choosing a new length stops the timer, so drop any background alert.
+      if (wasRunning) void cancelBackground();
+    },
     toggle: () => {
       unlockAudio();
       // Use one timestamp for both the new end time and the display clock, so
       // the countdown starts exactly at the full interval with no lag jump.
       const ts = Date.now();
       setNow(ts);
+      const wasRunning = timer.status === "running";
       dispatch({ type: "toggle", now: ts });
+      if (wasRunning) {
+        void cancelBackground();
+      } else {
+        void scheduleBackground(alertFor(timer, ts + timer.durationMs));
+      }
     },
-    setRepeat: (repeat) => dispatch({ type: "setRepeat", repeat }),
+    setRepeat: (repeat) => {
+      dispatch({ type: "setRepeat", repeat });
+      // If running, the pending background alert must reflect the new setting.
+      if (timer.status === "running" && timer.endsAt !== null) {
+        void scheduleBackground(alertFor({ ...timer, repeat }, timer.endsAt));
+      }
+    },
   };
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;

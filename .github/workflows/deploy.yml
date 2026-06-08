@@ -26,6 +26,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+        # Optional: set these repo variables to enable background push.
+        # Leave them unset for a foreground-only timer.
+        env:
+          VITE_PUSH_API: ${{ vars.VITE_PUSH_API }}
+          VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

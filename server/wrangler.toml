@@ -1,0 +1,26 @@
+# Cloudflare Worker config for the PingLoop push backend.
+# Replace database_id with your own D1 id (see server/README.md). Secrets
+# (VAPID_PRIVATE_KEY) are set with `wrangler secret put`, never in this file.
+
+name = "pingloop"
+main = "src/index.ts"
+compatibility_date = "2024-11-01"
+# The web push library pulls in node:crypto; this flag provides it.
+compatibility_flags = ["nodejs_compat"]
+
+# Runs the scheduled() handler once a minute to send any due pushes.
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pingloop"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+[vars]
+# The exact origin of your deployed frontend, used for CORS.
+ALLOWED_ORIGIN = "https://petervanlunteren.github.io"
+# VAPID subject: a contact mailto or https URL for your deployment.
+VAPID_SUBJECT = "mailto:peter@addaxdatascience.com"
+# VAPID public key. Safe to expose; must match the frontend VITE_VAPID_PUBLIC_KEY.
+VAPID_PUBLIC_KEY = "REPLACE_WITH_YOUR_VAPID_PUBLIC_KEY"
