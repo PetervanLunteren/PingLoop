@@ -1,0 +1,372 @@
+/* Design tokens taken straight from the PingLoop brand mark: the purple to blue
+   gradient, white surfaces, rounded geometry, and the Inter type stack. */
+:root {
+  --brand-from: #7c3aed;
+  --brand-to: #2563eb;
+  --brand-gradient: linear-gradient(135deg, var(--brand-from), var(--brand-to));
+  --brand: #6d28d9;
+
+  --bg: #f4f5fb;
+  --surface: #ffffff;
+  --text: #1f2430;
+  --muted: #6b7280;
+  --border: #e6e8ef;
+  --danger: #dc2626;
+  --ok: #16a34a;
+
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 1px 2px rgba(20, 20, 50, 0.06), 0 6px 20px rgba(20, 20, 50, 0.06);
+
+  --font: "Inter", "SF Pro Display", "Segoe UI", system-ui, -apple-system,
+    Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Layout ------------------------------------------------------------------ */
+.app {
+  max-width: 560px;
+  margin: 0 auto;
+  padding-bottom: 64px;
+}
+
+.header {
+  background: var(--brand-gradient);
+  padding: 18px 20px calc(18px + env(safe-area-inset-top, 0px));
+  padding-top: calc(18px + env(safe-area-inset-top, 0px));
+  display: flex;
+  align-items: center;
+}
+
+.header img {
+  height: 34px;
+  width: auto;
+}
+
+.content {
+  padding: 16px;
+  display: grid;
+  gap: 14px;
+}
+
+.section-intro {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Tabs -------------------------------------------------------------------- */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: #eceef6;
+  border-radius: var(--radius);
+  padding: 4px;
+}
+
+.tabs button {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 8px;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.tabs button.active {
+  background: var(--surface);
+  color: var(--brand);
+  box-shadow: var(--shadow);
+}
+
+/* Cards ------------------------------------------------------------------- */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.card h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.row.between {
+  justify-content: space-between;
+}
+
+.grow {
+  flex: 1;
+  min-width: 0;
+}
+
+.title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.countdown {
+  font-variant-numeric: tabular-nums;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.countdown.finished {
+  color: var(--brand);
+}
+
+/* Buttons ----------------------------------------------------------------- */
+.btn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:hover {
+  border-color: #d3d6e4;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--brand-gradient);
+  border: none;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.05);
+}
+
+.btn-danger {
+  color: var(--danger);
+  border-color: #f0c4c4;
+}
+
+.btn-sm {
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+.btn-icon {
+  padding: 7px 11px;
+}
+
+/* Forms ------------------------------------------------------------------- */
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="time"],
+input[type="datetime-local"] {
+  width: 100%;
+  font: inherit;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--text);
+}
+
+input:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+
+.field {
+  margin-bottom: 12px;
+}
+
+.field-row {
+  display: flex;
+  gap: 10px;
+}
+
+.field-row > .field {
+  flex: 1;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.preset {
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 999px;
+  padding: 7px 13px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.preset.active {
+  border-color: var(--brand);
+  color: var(--brand);
+  background: #f3efff;
+}
+
+/* Weekday toggle ---------------------------------------------------------- */
+.days {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.day {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.day.on {
+  background: var(--brand-gradient);
+  color: #fff;
+  border: none;
+}
+
+/* Empty states ------------------------------------------------------------ */
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 24px 12px;
+}
+
+.empty strong {
+  display: block;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+/* Status pills ------------------------------------------------------------ */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.pill.on {
+  background: #e7f6ec;
+  color: var(--ok);
+}
+
+.pill.off {
+  background: #eef0f6;
+  color: var(--muted);
+}
+
+/* Notification setup ------------------------------------------------------ */
+.setup {
+  border-left: 4px solid var(--brand);
+}
+
+.setup .note {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+details.limits {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+details.limits summary {
+  cursor: pointer;
+  color: var(--brand);
+  font-weight: 600;
+}
+
+details.limits ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+details.limits li {
+  margin-bottom: 4px;
+}
+
+.muted-link {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Error screen ------------------------------------------------------------ */
+.error-screen {
+  max-width: 480px;
+  margin: 60px auto;
+  padding: 24px;
+}
