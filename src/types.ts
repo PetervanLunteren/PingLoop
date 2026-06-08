@@ -11,4 +11,6 @@ export interface TimerState {
   durationMs: number;
   endsAt: number | null;
   status: TimerStatus;
+  /** When true, the timer restarts itself right after it pings. */
+  repeat: boolean;
 }

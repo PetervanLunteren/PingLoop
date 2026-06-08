@@ -19,6 +19,8 @@ import { playBeep, unlockAudio } from "./sound";
 type Action =
   | { type: "select"; durationMs: number }
   | { type: "toggle"; now: number }
+  | { type: "setRepeat"; repeat: boolean }
+  | { type: "restart"; now: number }
   | { type: "finish" };
 
 function reducer(timer: TimerState, action: Action): TimerState {
@@ -29,6 +31,10 @@ function reducer(timer: TimerState, action: Action): TimerState {
       return timer.status === "running"
         ? stop(timer)
         : start(timer, action.now);
+    case "setRepeat":
+      return { ...timer, repeat: action.repeat };
+    case "restart":
+      return start(timer, action.now);
     case "finish":
       return markFinished(timer);
   }
@@ -40,6 +46,7 @@ interface Store {
   now: number;
   selectInterval: (durationMs: number) => void;
   toggle: () => void;
+  setRepeat: (repeat: boolean) => void;
 }
 
 const StoreContext = createContext<Store | null>(null);
@@ -64,9 +71,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // raise one notification plus one sound. Marking state prevents a re-fire.
   useEffect(() => {
     if (isFinished(timer, now)) {
-      dispatch({ type: "finish" });
       playBeep();
-      void showNotification("Timer finished", "Your countdown is done.");
+      if (timer.repeat) {
+        void showNotification("Timer finished", "Starting the next round.");
+        dispatch({ type: "restart", now });
+      } else {
+        void showNotification("Timer finished", "Your countdown is done.");
+        dispatch({ type: "finish" });
+      }
     }
   }, [now, timer]);
 
@@ -82,6 +94,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setNow(ts);
       dispatch({ type: "toggle", now: ts });
     },
+    setRepeat: (repeat) => dispatch({ type: "setRepeat", repeat }),
   };
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;

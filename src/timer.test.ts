@@ -12,7 +12,13 @@ import type { TimerState } from "./types";
 const THIRTY_MIN = 30 * 60 * 1000;
 
 function makeTimer(overrides: Partial<TimerState> = {}): TimerState {
-  return { durationMs: THIRTY_MIN, endsAt: null, status: "idle", ...overrides };
+  return {
+    durationMs: THIRTY_MIN,
+    endsAt: null,
+    status: "idle",
+    repeat: false,
+    ...overrides,
+  };
 }
 
 describe("start", () => {
@@ -20,6 +26,10 @@ describe("start", () => {
     const t = start(makeTimer(), 1000);
     expect(t.status).toBe("running");
     expect(t.endsAt).toBe(1000 + THIRTY_MIN);
+  });
+
+  it("preserves the repeat setting", () => {
+    expect(start(makeTimer({ repeat: true }), 1000).repeat).toBe(true);
   });
 });
 

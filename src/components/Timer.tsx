@@ -9,7 +9,7 @@ const RADIUS = 45;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
 export function Timer() {
-  const { timer, now, selectInterval, toggle } = useStore();
+  const { timer, now, selectInterval, toggle, setRepeat } = useStore();
 
   const remaining = remainingAt(timer, now);
   const finished = timer.status === "finished";
@@ -55,6 +55,19 @@ export function Timer() {
             </button>
           );
         })}
+      </div>
+
+      <div className="repeat-row">
+        <span>Repeat</span>
+        <button
+          className={timer.repeat ? "switch on" : "switch"}
+          role="switch"
+          aria-checked={timer.repeat}
+          aria-label="Repeat the timer after it ends"
+          onClick={() => setRepeat(!timer.repeat)}
+        >
+          <span className="knob" />
+        </button>
       </div>
 
       <button className="btn btn-primary toggle" onClick={toggle}>

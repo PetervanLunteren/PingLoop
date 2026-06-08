@@ -25,7 +25,8 @@ notification.
 - Pick a length: 5, 10, 15, 30, or 60 minutes.
 - One on/off toggle to start and stop.
 - A ring that empties as time runs down.
-- Your last used length is remembered for next time.
+- A repeat switch: when on, the timer restarts itself after each ping.
+- Your last used length and repeat setting are remembered for next time.
 
 ## Local development
 

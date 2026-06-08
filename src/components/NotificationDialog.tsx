@@ -52,7 +52,7 @@ export function NotificationDialog({
 
         {status !== "granted" && <EnableBlock status={status} onEnable={enable} />}
 
-        <button className="btn btn-sm test" onClick={testPing}>
+        <button className="btn btn-sm dialog-action" onClick={testPing}>
           Send test ping
         </button>
 
@@ -78,7 +78,7 @@ function EnableBlock({
     return (
       <>
         <p className="note">Turn on notifications so the timer can alert you.</p>
-        <button className="btn btn-primary btn-sm" onClick={onEnable}>
+        <button className="btn btn-primary btn-sm dialog-action" onClick={onEnable}>
           Turn on notifications
         </button>
       </>

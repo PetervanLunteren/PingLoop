@@ -227,6 +227,44 @@ body {
   color: #fff;
 }
 
+.repeat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+.switch {
+  position: relative;
+  width: 46px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: #d7dae6;
+  cursor: pointer;
+}
+
+.switch.on {
+  background: var(--brand-gradient);
+}
+
+.switch .knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(20, 20, 50, 0.25);
+  transition: left 0.15s ease;
+}
+
+.switch.on .knob {
+  left: 21px;
+}
+
 /* Buttons ----------------------------------------------------------------- */
 .btn {
   border: 1px solid var(--border);
@@ -303,8 +341,11 @@ body {
   margin: 8px 0;
 }
 
-.dialog .test {
-  margin-top: 12px;
+.dialog-action {
+  display: block;
+  width: 240px;
+  max-width: 100%;
+  margin-top: 10px;
 }
 
 /* Error screen ------------------------------------------------------------ */
