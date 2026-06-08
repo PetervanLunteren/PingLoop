@@ -59,10 +59,29 @@ body {
   padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 8px;
 }
 
-.header .logo {
-  height: 54px;
-  width: auto;
-  max-width: 76%;
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  width: 44px;
+  height: 44px;
+}
+
+.brand-name {
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-name strong {
+  font-weight: 700;
 }
 
 .bell {
@@ -253,15 +272,16 @@ body {
   z-index: 50;
   background: rgba(20, 20, 50, 0.45);
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
   padding: 16px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 
 @media (min-width: 480px) {
   .overlay {
-    align-items: center;
+    justify-content: center;
   }
 }
 
@@ -278,41 +298,13 @@ body {
 }
 
 .dialog .note {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--muted);
   margin: 8px 0;
 }
 
-.info-list {
-  margin: 0 0 8px;
-  padding-left: 18px;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.info-list li {
-  margin-bottom: 4px;
-}
-
-details.limits {
-  margin-top: 10px;
-  font-size: 13px;
-}
-
-details.limits summary {
-  cursor: pointer;
-  color: var(--brand);
-  font-weight: 600;
-}
-
-details.limits ul {
-  margin: 8px 0 0;
-  padding-left: 18px;
-  color: var(--muted);
-}
-
-details.limits li {
-  margin-bottom: 4px;
+.dialog .test {
+  margin-top: 12px;
 }
 
 /* Error screen ------------------------------------------------------------ */

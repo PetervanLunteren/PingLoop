@@ -5,6 +5,10 @@
   </picture>
 </p>
 
+<p align="center">
+  <a href="https://petervanlunteren.github.io/PingLoop/">https://petervanlunteren.github.io/PingLoop/</a>
+</p>
+
 A simple, focused countdown timer that runs fully in your browser. No backend,
 no account, no database. Your settings stay on your device, and the app works
 offline after the first load.
@@ -59,9 +63,10 @@ closed, and PingLoop does not pretend otherwise.
   system may delay or drop notifications.
 - If your device sleeps or the browser suspends the tab, the alert can be late.
 
-The sound plays while the app is open even if notifications are blocked. The
-notifications card only appears while notifications are off, and it has a test
-ping button so you can confirm your setup before it disappears.
+The sound plays while the app is open even if notifications are blocked. Open
+the bell button in the top left to turn notifications on, send a test ping, and
+read how to add PingLoop to your home screen. The bell shows a dot while
+notifications are off.
 
 ## Install as an app (PWA)
 
@@ -102,9 +107,12 @@ repository). The manifest `start_url` and `scope` follow `base` automatically.
 
 ## App icons
 
-The icons are generated from the brand mark `public/pingloop-icon.svg` by
-`@vite-pwa/assets-generator`. The generated PNGs are committed so the build does
-not depend on regenerating them. If you change the mark, regenerate them:
+The icons are generated from the full-bleed brand mark
+`public/pingloop-icon-fullbleed.svg` by `@vite-pwa/assets-generator`. Full-bleed
+means the gradient fills the whole square with no padding, so the platform
+rounds the corners itself and the installed icon has no white frame. The
+generated PNGs are committed so the build does not depend on regenerating them.
+If you change the mark, regenerate them:
 
 ```bash
 npm run generate-icons
@@ -121,8 +129,8 @@ src/
   notify.ts         Web Notifications API wrapper and support detection
   sound.ts          Web Audio API beep
   state.tsx         reducer, persistence, and the finish loop
-  App.tsx           layout
-  components/       Timer, notification setup, error boundary
+  App.tsx           layout, header bell, and dialog wiring
+  components/       Timer, notification bell and dialog, error boundary
   timer.test.ts     Vitest tests for the pure logic
 ```
 

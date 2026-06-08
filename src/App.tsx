@@ -5,7 +5,7 @@ import { NotificationBell } from "./components/NotificationBell";
 import { NotificationDialog } from "./components/NotificationDialog";
 import { supportStatus, type NotificationSupport } from "./notify";
 
-const logo = `${import.meta.env.BASE_URL}pingloop-wide-light.svg`;
+const mark = `${import.meta.env.BASE_URL}pingloop-icon.svg`;
 
 export function App() {
   const [status, setStatus] = useState<NotificationSupport>(() => supportStatus());
@@ -19,7 +19,13 @@ export function App() {
             needsAttention={status !== "granted"}
             onClick={() => setSetupOpen(true)}
           />
-          <img className="logo" src={logo} alt="PingLoop" />
+          {/* The wordmark is HTML text, not SVG text, so it stays crisp on iOS. */}
+          <div className="brand">
+            <img className="brand-mark" src={mark} alt="" aria-hidden="true" />
+            <span className="brand-name">
+              <strong>Ping</strong>Loop
+            </span>
+          </div>
         </header>
         <main className="content">
           <Timer />
