@@ -52,17 +52,49 @@ body {
 }
 
 .header {
-  background: var(--brand-gradient);
-  padding-top: calc(18px + env(safe-area-inset-top, 0px));
-  padding-bottom: 18px;
-  padding-left: 20px;
+  position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 8px;
 }
 
-.header img {
-  height: 40px;
+.header .logo {
+  height: 54px;
   width: auto;
+  max-width: 76%;
+}
+
+.bell {
+  position: absolute;
+  left: 14px;
+  top: calc(50% + env(safe-area-inset-top, 0px) / 2);
+  transform: translateY(-50%);
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.bell:hover {
+  border-color: #d3d6e4;
+}
+
+.bell-dot {
+  position: absolute;
+  top: 8px;
+  right: 9px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #ef4444;
+  border: 2px solid var(--surface);
 }
 
 .content {
@@ -75,6 +107,10 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.row.between {
+  justify-content: space-between;
 }
 
 /* Cards ------------------------------------------------------------------- */
@@ -210,15 +246,52 @@ body {
   font-size: 17px;
 }
 
-/* Notification setup ------------------------------------------------------ */
-.setup {
-  border-left: 4px solid var(--brand);
+/* Notification dialog ----------------------------------------------------- */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(20, 20, 50, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 
-.setup .note {
+@media (min-width: 480px) {
+  .overlay {
+    align-items: center;
+  }
+}
+
+.dialog {
+  width: 100%;
+  max-width: 460px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.dialog h3 {
+  font-size: 14px;
+  margin: 16px 0 6px;
+}
+
+.dialog .note {
   font-size: 13px;
   color: var(--muted);
   margin: 8px 0;
+}
+
+.info-list {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.info-list li {
+  margin-bottom: 4px;
 }
 
 details.limits {
