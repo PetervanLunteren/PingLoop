@@ -19,8 +19,7 @@ export default defineConfig({
       manifest: {
         name: "PingLoop",
         short_name: "PingLoop",
-        description:
-          "Simple recurring reminders, timers, and productivity nudges.",
+        description: "A simple, focused countdown timer.",
         theme_color: "#7c3aed",
         background_color: "#ffffff",
         display: "standalone",

@@ -1,16 +1,17 @@
-// localStorage persistence. Following the repo conventions we crash loudly on
-// corrupt or unexpected data rather than silently resetting it: a real problem
-// should be visible, not hidden. A first run with no saved data is normal and
-// returns empty state.
+// localStorage persistence for the single timer. Following the repo conventions
+// we crash loudly on corrupt data rather than silently resetting it. A first run
+// with no saved data returns the default interval.
 
-import type { AppState } from "./types";
+import type { TimerState } from "./types";
 
-const STORAGE_KEY = "pingloop:v1";
+const STORAGE_KEY = "pingloop:timer:v1";
 
-export function loadState(): AppState {
+const DEFAULT_DURATION_MS = 30 * 60 * 1000;
+
+export function loadTimer(): TimerState {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (raw === null) {
-    return { timers: [], reminders: [], pings: [] };
+    return { durationMs: DEFAULT_DURATION_MS, endsAt: null, status: "idle" };
   }
 
   let parsed: unknown;
@@ -20,14 +21,14 @@ export function loadState(): AppState {
     throw new Error(`PingLoop saved data could not be parsed: ${String(err)}`);
   }
 
-  if (!isAppState(parsed)) {
+  if (!isTimerState(parsed)) {
     throw new Error("PingLoop saved data has an unexpected shape");
   }
   return parsed;
 }
 
-export function saveState(state: AppState): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+export function saveTimer(timer: TimerState): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(timer));
 }
 
 /** Wipe saved data. Used by the error screen to recover from bad data. */
@@ -35,12 +36,12 @@ export function clearState(): void {
   localStorage.removeItem(STORAGE_KEY);
 }
 
-function isAppState(value: unknown): value is AppState {
+function isTimerState(value: unknown): value is TimerState {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
   return (
-    Array.isArray(v.timers) &&
-    Array.isArray(v.reminders) &&
-    Array.isArray(v.pings)
+    typeof v.durationMs === "number" &&
+    (typeof v.endsAt === "number" || v.endsAt === null) &&
+    (v.status === "idle" || v.status === "running" || v.status === "finished")
   );
 }

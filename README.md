@@ -5,23 +5,23 @@
   </picture>
 </p>
 
-Simple recurring reminders, timers, and productivity nudges that run fully in
-your browser. No backend, no account, no database. Your data stays on your
-device, and the app works offline after the first load.
+A simple, focused countdown timer that runs fully in your browser. No backend,
+no account, no database. Your settings stay on your device, and the app works
+offline after the first load.
 
 PingLoop is built with Vite, React, and TypeScript, and ships as a static site
 you can host on GitHub Pages.
 
-## The three concepts
+## What it does
 
-PingLoop has one mental model with three parts:
+One timer, in the spirit of a physical Pomodoro cube: pick a length, toggle it
+on, and it counts down. When it reaches zero it plays a sound and shows a
+notification.
 
-- **Timers**: countdowns that beep and notify when they reach zero, like a 25
-  minute study timer. Start, pause, reset, delete.
-- **Reminders**: one-time nudges at a specific date and time, like "call the
-  dentist". They fire once.
-- **Pings**: repeating nudges on a schedule, like a ping every hour from 09:00
-  to 17:00 on weekdays. Enable, disable, edit, delete, and see the next ping.
+- Pick a length: 5, 10, 15, 30, or 60 minutes.
+- One on/off toggle to start and stop.
+- A ring that empties as time runs down.
+- Your last used length is remembered for next time.
 
 ## Local development
 
@@ -48,20 +48,20 @@ This is the honest part. PingLoop has no server, so it can only act while it is
 open. There is no way for a static site to reliably wake itself up after it is
 closed, and PingLoop does not pretend otherwise.
 
-- Pings fire from a scheduling loop that runs while the app is open in a tab or
-  as an installed app. Close it, and nothing fires until you open it again.
-- When you reopen the app, anything that came due while it was closed fires once
-  as a catch-up, so you still see it.
-- Install PingLoop to your home screen or desktop for the best chance of pings
-  arriving, since installed apps are kept alive longer than tabs.
+- The timer runs from a loop while the app is open in a tab or as an installed
+  app. Close it, and it stops.
+- The end time is absolute, so the countdown survives a reload. If the timer was
+  due while the tab was asleep, it fires when you reopen the app.
+- Install PingLoop to your home screen or desktop for the best chance of the
+  alert arriving, since installed apps are kept alive longer than tabs.
 - On iPhone and iPad, browser tabs cannot show notifications at all. You must
   add PingLoop to the home screen and use iOS 16.4 or later. Even then, the
   system may delay or drop notifications.
-- If your device sleeps or the browser suspends the tab, pings can be late or
-  missed.
+- If your device sleeps or the browser suspends the tab, the alert can be late.
 
-Sounds always play while the app is open, even if notifications are blocked.
-Use the "Send test ping" button on the notifications card to confirm your setup.
+The sound plays while the app is open even if notifications are blocked. The
+notifications card only appears while notifications are off, and it has a test
+ping button so you can confirm your setup before it disappears.
 
 ## Install as an app (PWA)
 
@@ -114,17 +114,16 @@ npm run generate-icons
 
 ```
 src/
-  types.ts          shared types: Timer, Reminder, RecurringPing
+  types.ts          the TimerState type
   timer.ts          pure timer-state transitions
-  recurrence.ts     pure ping scheduling math
-  format.ts         display and parsing helpers
+  format.ts         countdown formatting
   storage.ts        localStorage load and save
   notify.ts         Web Notifications API wrapper and support detection
   sound.ts          Web Audio API beep
-  state.tsx         reducer, persistence, and the scheduling loop
-  App.tsx           layout and tabs
-  components/       the views: tabs, forms, cards, permission setup
-  *.test.ts         Vitest tests for the pure logic
+  state.tsx         reducer, persistence, and the finish loop
+  App.tsx           layout
+  components/       Timer, notification setup, error boundary
+  timer.test.ts     Vitest tests for the pure logic
 ```
 
 The logic lives in small, pure, dependency-free modules so it is easy to read
@@ -133,10 +132,8 @@ and test. The React components are thin views over a single store.
 ## Limitations and non-goals
 
 - No guaranteed background notifications. There is no push server.
-- No accounts and no sync. Data is stored per browser in `localStorage`, so it
-  does not move between devices or browsers.
-- Times use the device's local clock. PingLoop does not handle timezone travel
-  or model daylight-saving transitions precisely.
+- No accounts and no sync. The setting is stored per browser in `localStorage`,
+  so it does not move between devices or browsers.
 
 ## License
 

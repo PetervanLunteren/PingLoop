@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Simple recurring reminders, timers, and productivity nudges that run fully in the browser.",
+  "description": "A simple, focused countdown timer that runs fully in the browser.",
   "license": "MIT",
   "scripts": {
     "dev": "vite",

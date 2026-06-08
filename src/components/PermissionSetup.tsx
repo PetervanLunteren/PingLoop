@@ -9,8 +9,14 @@ import {
 } from "../notify";
 import { playBeep, unlockAudio } from "../sound";
 
+/**
+ * Notification setup. Shown only while notifications are off, so it disappears
+ * once they are granted. Lets the user turn them on and send a test ping.
+ */
 export function PermissionSetup() {
   const [status, setStatus] = useState<NotificationSupport>(() => supportStatus());
+
+  if (status === "granted") return null;
 
   async function enable() {
     unlockAudio();
@@ -25,11 +31,7 @@ export function PermissionSetup() {
 
   return (
     <section className="card setup">
-      <div className="row between">
-        <h2>Notifications</h2>
-        <StatusPill status={status} />
-      </div>
-
+      <h2>Notifications</h2>
       <StatusBody status={status} onEnable={enable} />
 
       <div className="row" style={{ marginTop: 12 }}>
@@ -44,11 +46,6 @@ export function PermissionSetup() {
   );
 }
 
-function StatusPill({ status }: { status: NotificationSupport }) {
-  if (status === "granted") return <span className="pill on">On</span>;
-  return <span className="pill off">Off</span>;
-}
-
 function StatusBody({
   status,
   onEnable,
@@ -56,19 +53,11 @@ function StatusBody({
   status: NotificationSupport;
   onEnable: () => void;
 }) {
-  if (status === "granted") {
-    return (
-      <p className="note">
-        Notifications are on. Pings will show while PingLoop is open.
-      </p>
-    );
-  }
-
   if (status === "default") {
     return (
       <>
         <p className="note">
-          Allow notifications so timers, reminders, and pings can reach you.
+          Allow notifications so the timer can reach you when it finishes.
         </p>
         <button className="btn btn-primary btn-sm" onClick={onEnable}>
           Enable notifications
@@ -81,7 +70,7 @@ function StatusBody({
     return (
       <p className="note">
         Notifications are blocked. Turn them back on for this site in your
-        browser settings. Sounds still play while the app is open.
+        browser settings. The sound still plays while the app is open.
       </p>
     );
   }
@@ -98,8 +87,8 @@ function StatusBody({
   }
   return (
     <p className="note">
-      This browser does not support notifications. Timers and pings will still
-      play a sound while PingLoop is open.
+      This browser does not support notifications. The timer will still play a
+      sound while PingLoop is open.
     </p>
   );
 }
@@ -110,20 +99,20 @@ function Limitations() {
       <summary>How reliable is this?</summary>
       <ul>
         <li>
-          PingLoop has no server. Pings only fire while it is open in a tab or as
-          an installed app.
+          PingLoop has no server. The timer only fires while it is open in a tab
+          or as an installed app.
         </li>
         <li>
-          Install it to your home screen or desktop for the best chance of pings
-          arriving.
+          Install it to your home screen or desktop for the best chance of the
+          alert arriving.
         </li>
         <li>
           On iPhone and iPad, notifications need the installed app and iOS 16.4
           or later, and the system may still delay or drop them.
         </li>
         <li>
-          If the device sleeps or the browser suspends the tab, pings can be late
-          or missed. They catch up when you reopen the app.
+          If the device sleeps or the browser suspends the tab, the timer keeps
+          its end time and fires when you reopen the app.
         </li>
       </ul>
     </details>
