@@ -10,7 +10,7 @@ so often. That's it. Pick a length, get a ping.
 
 It was also a nice excuse to play with a few things I had not used much: installable
 PWAs, free Cloudflare Workers, and getting real notifications to show up on both my
-iPhone and my desktop.
+iPhone and my desktop, even with the app closed, which was the tricky part.
 
 <p align="center">
   <a href="https://petervanlunteren.github.io/PingLoop/"><b>Give it a try →</b></a>
