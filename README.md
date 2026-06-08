@@ -1,4 +1,6 @@
-# PingLoop
+<p align="center">
+  <img src="public/pingloop-wide-pro.svg" alt="PingLoop" width="640">
+</p>
 
 Simple recurring reminders, timers, and productivity nudges that run fully in
 your browser. No backend, no account, no database. Your data stays on your
