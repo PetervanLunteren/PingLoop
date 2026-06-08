@@ -5,9 +5,22 @@
 
 import { precacheAndRoute } from "workbox-precaching";
 
+type PrecacheEntry = string | { url: string; revision: string | null };
+
 declare const self: ServiceWorkerGlobalScope & {
-  __WB_MANIFEST: Array<{ url: string; revision: string | null }>;
+  __WB_MANIFEST: PrecacheEntry[];
 };
+
+// Register the push handlers first, before anything that could throw, so they
+// are always active even if precaching has an issue.
+self.addEventListener("push", (event) => {
+  event.waitUntil(handlePush(event));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(focusApp());
+});
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -16,11 +29,16 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-precacheAndRoute(self.__WB_MANIFEST);
-
-self.addEventListener("push", (event) => {
-  event.waitUntil(handlePush(event));
+// vite-plugin-pwa can list the same URL (the web manifest) twice with different
+// revisions, which makes precacheAndRoute throw. Dedupe by URL first.
+const seen = new Set<string>();
+const manifest = self.__WB_MANIFEST.filter((entry) => {
+  const url = typeof entry === "string" ? entry : entry.url;
+  if (seen.has(url)) return false;
+  seen.add(url);
+  return true;
 });
+precacheAndRoute(manifest);
 
 async function handlePush(event: PushEvent): Promise<void> {
   const { title, body } = readPushData(event);
@@ -51,11 +69,6 @@ function readPushData(event: PushEvent): { title: string; body: string } {
   }
   return { title: "PingLoop", body: "Your timer finished." };
 }
-
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  event.waitUntil(focusApp());
-});
 
 async function focusApp(): Promise<void> {
   const windows = await self.clients.matchAll({
