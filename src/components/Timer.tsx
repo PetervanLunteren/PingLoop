@@ -2,7 +2,7 @@ import { useStore } from "../state";
 import { remainingAt } from "../timer";
 import { formatDuration } from "../format";
 
-const INTERVALS_MIN = [5, 10, 15, 30, 60];
+const INTERVALS_MIN = [5, 10, 15, 30, 55, 60];
 
 // Ring geometry. The radius drives the dash length below.
 const RADIUS = 45;

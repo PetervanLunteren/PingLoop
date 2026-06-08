@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://petervanlunteren.github.io/PingLoop/">https://petervanlunteren.github.io/PingLoop/</a>
+  <img src="docs/screenshot.png" alt="PingLoop running a 5 minute timer" width="320" />
 </p>
 
 A tiny countdown timer that pings you when the time is up.
@@ -20,7 +20,7 @@ PWAs, free Cloudflare Workers, and getting real notifications to show up on both
 iPhone and my desktop.
 
 <p align="center">
-  <img src="docs/screenshot.png" alt="PingLoop running a 5 minute timer" width="320" />
+  <a href="https://petervanlunteren.github.io/PingLoop/"><b>Give it a try →</b></a>
 </p>
 
 
