@@ -1,6 +1,6 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="public/pingloop-wide-pro.svg" />
+    <source media="(prefers-color-scheme: dark)" srcset="public/pingloop-wide-dark.svg" />
     <img src="public/pingloop-wide-light.svg" alt="PingLoop" width="640" />
   </picture>
 </p>

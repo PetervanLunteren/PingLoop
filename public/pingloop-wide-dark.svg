@@ -9,7 +9,7 @@
 <circle cx="420" cy="500" r="225" fill="none" stroke="white" stroke-width="30" stroke-linecap="round" stroke-dasharray="1150 250"/>
 <circle cx="620" cy="345" r="20" fill="white"/>
 <path d="M435 325 L325 525 H415 L380 665 L540 450 H450 Z" fill="white"/>
-<text x="940" y="690" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="520" fill="url(#g)">
+<text x="940" y="690" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="520" fill="white">
 <tspan font-weight="700">Ping</tspan><tspan font-weight="400">Loop</tspan>
 </text>
 </svg>
