@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="public/pingloop-wide-pro.svg" alt="PingLoop" width="640">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/pingloop-wide-pro.svg" />
+    <img src="public/pingloop-wide-light.svg" alt="PingLoop" width="640" />
+  </picture>
 </p>
 
 Simple recurring reminders, timers, and productivity nudges that run fully in

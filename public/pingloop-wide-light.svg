@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2600 1000">
+<defs>
+<linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" stop-color="#9333EA"/>
+<stop offset="100%" stop-color="#2563EB"/>
+</linearGradient>
+</defs>
+<rect x="40" y="120" width="760" height="760" rx="160" fill="url(#g)"/>
+<circle cx="420" cy="500" r="225" fill="none" stroke="white" stroke-width="30" stroke-linecap="round" stroke-dasharray="1150 250"/>
+<circle cx="620" cy="345" r="20" fill="white"/>
+<path d="M435 325 L325 525 H415 L380 665 L540 450 H450 Z" fill="white"/>
+<text x="980" y="610" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="220" fill="url(#g)">
+<tspan font-weight="700">Ping</tspan><tspan font-weight="400">Loop</tspan>
+</text>
+</svg>
