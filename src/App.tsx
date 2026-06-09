@@ -3,13 +3,19 @@ import { StoreProvider } from "./state";
 import { Timer } from "./components/Timer";
 import { NotificationBell } from "./components/NotificationBell";
 import { NotificationDialog } from "./components/NotificationDialog";
-import { supportStatus, type NotificationSupport } from "./notify";
+import { requestPermission, supportStatus, type NotificationSupport } from "./notify";
 
 const mark = `${import.meta.env.BASE_URL}pingloop-icon.svg`;
 
 export function App() {
   const [status, setStatus] = useState<NotificationSupport>(() => supportStatus());
   const [setupOpen, setSetupOpen] = useState(false);
+
+  // Ask for notification permission. Called from Start when it is still off,
+  // so a timer is never left without a way to reach you.
+  async function requestNotifications() {
+    setStatus(await requestPermission());
+  }
 
   return (
     <StoreProvider>
@@ -28,7 +34,10 @@ export function App() {
           </div>
         </header>
         <main className="content">
-          <Timer />
+          <Timer
+            notificationsGranted={status === "granted"}
+            onRequestNotifications={requestNotifications}
+          />
         </main>
         {setupOpen && (
           <NotificationDialog

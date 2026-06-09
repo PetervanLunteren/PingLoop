@@ -14,8 +14,23 @@ for (let m = MIN_MINUTES; m <= MAX_MINUTES; m += STEP_MINUTES) OPTIONS.push(m);
 const RADIUS = 45;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 
-export function Timer() {
+interface TimerProps {
+  notificationsGranted: boolean;
+  onRequestNotifications: () => Promise<void>;
+}
+
+export function Timer({ notificationsGranted, onRequestNotifications }: TimerProps) {
   const { timer, now, selectInterval, toggle, setRepeat } = useStore();
+
+  // Starting a timer with notifications off means it cannot reach you when
+  // closed, so ask for permission first. Only prompts when it is still off.
+  async function handleToggle() {
+    const starting = timer.status !== "running";
+    if (starting && !notificationsGranted) {
+      await onRequestNotifications();
+    }
+    toggle();
+  }
 
   const remaining = remainingAt(timer, now);
   const finished = timer.status === "finished";
@@ -83,7 +98,7 @@ export function Timer() {
         </button>
       </div>
 
-      <button className="btn btn-primary toggle" onClick={toggle}>
+      <button className="btn btn-primary toggle" onClick={() => void handleToggle()}>
         {running ? "Stop" : "Start"}
       </button>
     </section>
