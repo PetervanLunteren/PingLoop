@@ -1,14 +1,9 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import { useStore } from "../state";
 import { remainingAt } from "../timer";
 import { formatDuration } from "../format";
 
-const MIN_MINUTES = 5;
-const MAX_MINUTES = 120;
-const STEP_MINUTES = 5;
-
-const OPTIONS: number[] = [];
-for (let m = MIN_MINUTES; m <= MAX_MINUTES; m += STEP_MINUTES) OPTIONS.push(m);
+const MAX_CUSTOM_MIN = 600;
 
 // Ring geometry. The radius drives the dash length below.
 const RADIUS = 45;
@@ -22,6 +17,27 @@ interface TimerProps {
 export function Timer({ notificationsGranted, onRequestNotifications }: TimerProps) {
   const { timer, now, selectInterval, toggle, setRepeat } = useStore();
 
+  const remaining = remainingAt(timer, now);
+  const finished = timer.status === "finished";
+  const running = timer.status === "running";
+  const fraction = timer.durationMs > 0 ? remaining / timer.durationMs : 0;
+
+  // The minutes input is the only length control, pre-filled from the saved
+  // duration and remembered across reloads via the store's persistence.
+  const [text, setText] = useState(() => String(Math.round(timer.durationMs / 60000)));
+
+  function onInput(value: string) {
+    setText(value);
+    const minutes = clampMinutes(value);
+    if (minutes) selectInterval(minutes * 60000);
+  }
+
+  function onBlur() {
+    if (!clampMinutes(text)) {
+      setText(String(Math.round(timer.durationMs / 60000)));
+    }
+  }
+
   // Starting a timer with notifications off means it cannot reach you when
   // closed, so ask for permission first. Only prompts when it is still off.
   async function handleToggle() {
@@ -31,19 +47,6 @@ export function Timer({ notificationsGranted, onRequestNotifications }: TimerPro
     }
     toggle();
   }
-
-  const remaining = remainingAt(timer, now);
-  const finished = timer.status === "finished";
-  const running = timer.status === "running";
-  const fraction = timer.durationMs > 0 ? remaining / timer.durationMs : 0;
-
-  const currentMin = Math.round(timer.durationMs / 60000);
-  // A saved value might not be on the list (for example an older value). Show
-  // the nearest option and snap the stored duration to match.
-  const selectedMin = OPTIONS.includes(currentMin) ? currentMin : nearestOption(currentMin);
-  useEffect(() => {
-    if (selectedMin !== currentMin) selectInterval(selectedMin * 60000);
-  }, [selectedMin, currentMin, selectInterval]);
 
   return (
     <section className="timer card">
@@ -70,19 +73,18 @@ export function Timer({ notificationsGranted, onRequestNotifications }: TimerPro
         </div>
       </div>
 
-      <div className="length-row">
-        <select
-          className="minutes-select"
-          value={String(selectedMin)}
-          aria-label="Timer length in minutes"
-          onChange={(e) => selectInterval(Number(e.target.value) * 60000)}
-        >
-          {OPTIONS.map((m) => (
-            <option key={m} value={m}>
-              {m} minutes
-            </option>
-          ))}
-        </select>
+      <div className="custom-row">
+        <input
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={MAX_CUSTOM_MIN}
+          value={text}
+          aria-label="Minutes"
+          onChange={(e) => onInput(e.target.value)}
+          onBlur={onBlur}
+        />
+        <span>minutes</span>
       </div>
 
       <div className="repeat-row">
@@ -105,9 +107,9 @@ export function Timer({ notificationsGranted, onRequestNotifications }: TimerPro
   );
 }
 
-function nearestOption(min: number): number {
-  return OPTIONS.reduce(
-    (best, m) => (Math.abs(m - min) < Math.abs(best - min) ? m : best),
-    MIN_MINUTES,
-  );
+/** Parse a minutes string to a clamped integer, or 0 when invalid. */
+function clampMinutes(value: string): number {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n) || n < 1) return 0;
+  return Math.min(MAX_CUSTOM_MIN, n);
 }

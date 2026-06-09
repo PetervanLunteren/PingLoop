@@ -201,31 +201,41 @@ body {
   font-size: clamp(32px, 10vw, 46px);
 }
 
-.length-row {
+.custom-row {
   display: flex;
+  align-items: center;
   justify-content: center;
+  gap: 8px;
 }
 
-.minutes-select {
+.custom-row input {
+  width: 96px;
+  text-align: center;
   font: inherit;
   font-size: 16px;
   font-weight: 600;
-  color: var(--text);
-  padding: 10px 38px 10px 16px;
+  padding: 9px 10px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background-color: #fff;
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="%236b7280" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>');
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  -webkit-appearance: none;
-  appearance: none;
-  cursor: pointer;
+  background: #fff;
+  color: var(--text);
 }
 
-.minutes-select:focus {
+.custom-row input:focus {
   outline: 2px solid var(--brand);
   outline-offset: 1px;
+}
+
+/* Hide the number input spinners for a cleaner look. */
+.custom-row input::-webkit-outer-spin-button,
+.custom-row input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.custom-row span {
+  color: var(--muted);
+  font-size: 14px;
 }
 
 .repeat-row {
