@@ -37,6 +37,7 @@ export function App() {
           <Timer
             notificationsGranted={status === "granted"}
             onRequestNotifications={requestNotifications}
+            onShowSetup={() => setSetupOpen(true)}
           />
         </main>
         {setupOpen && (

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useStore } from "../state";
 import { remainingAt } from "../timer";
 import { formatDuration } from "../format";
+import { isIOS, isStandalone } from "../notify";
 
 const MAX_CUSTOM_MIN = 600;
 
@@ -12,9 +13,14 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 interface TimerProps {
   notificationsGranted: boolean;
   onRequestNotifications: () => Promise<void>;
+  onShowSetup: () => void;
 }
 
-export function Timer({ notificationsGranted, onRequestNotifications }: TimerProps) {
+export function Timer({
+  notificationsGranted,
+  onRequestNotifications,
+  onShowSetup,
+}: TimerProps) {
   const { timer, now, selectInterval, toggle, setRepeat } = useStore();
 
   const remaining = remainingAt(timer, now);
@@ -39,10 +45,17 @@ export function Timer({ notificationsGranted, onRequestNotifications }: TimerPro
   }
 
   // Starting a timer with notifications off means it cannot reach you when
-  // closed, so ask for permission first. Only prompts when it is still off.
+  // closed, so sort that out first.
   async function handleToggle() {
     const starting = timer.status !== "running";
     if (starting && !notificationsGranted) {
+      // On iOS, notifications only work from the installed app, so a Safari tab
+      // can never ping. Show the install steps and do not start.
+      if (isIOS() && !isStandalone()) {
+        onShowSetup();
+        return;
+      }
+      // Elsewhere a tab can notify, so just ask for permission.
       await onRequestNotifications();
     }
     toggle();
