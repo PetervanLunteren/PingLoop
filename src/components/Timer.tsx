@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { useStore } from "../state";
 import { remainingAt } from "../timer";
 import { formatDuration } from "../format";
 import { isIOS, isStandalone } from "../notify";
 
 const PRESETS_MIN = [30, 60];
-const MAX_REPEAT_HOURS = 24;
 
 // Ring geometry. The radius drives the dash length below.
 const RADIUS = 45;
@@ -22,25 +20,12 @@ export function Timer({
   onRequestNotifications,
   onShowSetup,
 }: TimerProps) {
-  const { timer, now, selectInterval, toggle, setRepeatHours } = useStore();
+  const { timer, now, selectInterval, toggle } = useStore();
 
   const remaining = remainingAt(timer, now);
   const finished = timer.status === "finished";
   const running = timer.status === "running";
   const fraction = timer.durationMs > 0 ? remaining / timer.durationMs : 0;
-
-  // "Stop after" hours, shown only when Repeat is on.
-  const [hoursText, setHoursText] = useState(() => String(timer.repeatHours));
-
-  function onHoursInput(value: string) {
-    setHoursText(value);
-    const hours = clampHours(value);
-    if (hours) setRepeatHours(hours);
-  }
-
-  function onHoursBlur() {
-    if (!clampHours(hoursText)) setHoursText(String(timer.repeatHours));
-  }
 
   // Starting a timer with notifications off means it cannot reach you when
   // closed, so sort that out first.
@@ -100,31 +85,9 @@ export function Timer({
         })}
       </div>
 
-      <div className="custom-row">
-        <span>Repeat for</span>
-        <input
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={MAX_REPEAT_HOURS}
-          value={hoursText}
-          aria-label="Repeat for this many hours"
-          onChange={(e) => onHoursInput(e.target.value)}
-          onBlur={onHoursBlur}
-        />
-        <span>hours</span>
-      </div>
-
       <button className="btn btn-primary toggle" onClick={() => void handleToggle()}>
         {running ? "Stop" : "Start"}
       </button>
     </section>
   );
-}
-
-/** Parse an hours string to a clamped integer, or 0 when invalid. */
-function clampHours(value: string): number {
-  const n = Math.floor(Number(value));
-  if (!Number.isFinite(n) || n < 1) return 0;
-  return Math.min(MAX_REPEAT_HOURS, n);
 }

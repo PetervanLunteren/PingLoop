@@ -11,8 +11,6 @@ export interface TimerState {
   durationMs: number;
   endsAt: number | null;
   status: TimerStatus;
-  /** How long a run keeps repeating, in hours, so it never loops forever. */
-  repeatHours: number;
   /** Absolute time the run stops, set when the timer starts. */
   repeatUntil: number | null;
 }

@@ -19,6 +19,8 @@ import { cancelBackground, scheduleBackground, type BackgroundAlert } from "./pu
 import { pickSuggestion } from "./suggestions";
 
 const HOUR_MS = 60 * 60 * 1000;
+// A run keeps repeating for this long, then stops on its own.
+const REPEAT_HOURS = 8;
 
 /** Build the background alert for a timer ending at `fireAt`. */
 function alertFor(
@@ -41,7 +43,6 @@ function alertFor(
 type Action =
   | { type: "select"; durationMs: number }
   | { type: "toggle"; now: number }
-  | { type: "setRepeatHours"; hours: number }
   | { type: "restart"; now: number }
   | { type: "finish" };
 
@@ -51,13 +52,11 @@ function reducer(timer: TimerState, action: Action): TimerState {
       return setDuration(timer, action.durationMs);
     case "toggle":
       if (timer.status === "running") return stop(timer);
-      // The timer always repeats, bounded by the stop-after window.
+      // The timer always repeats, bounded by the repeat window.
       return {
         ...start(timer, action.now),
-        repeatUntil: action.now + timer.repeatHours * HOUR_MS,
+        repeatUntil: action.now + REPEAT_HOURS * HOUR_MS,
       };
-    case "setRepeatHours":
-      return { ...timer, repeatHours: action.hours };
     case "restart":
       return start(timer, action.now);
     case "finish":
@@ -71,7 +70,6 @@ interface Store {
   now: number;
   selectInterval: (durationMs: number) => void;
   toggle: () => void;
-  setRepeatHours: (hours: number) => void;
 }
 
 const StoreContext = createContext<Store | null>(null);
@@ -130,11 +128,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (wasRunning) {
         void cancelBackground();
       } else {
-        const repeatUntil = ts + timer.repeatHours * HOUR_MS;
+        const repeatUntil = ts + REPEAT_HOURS * HOUR_MS;
         void scheduleBackground(alertFor(timer, ts + timer.durationMs, repeatUntil));
       }
     },
-    setRepeatHours: (hours) => dispatch({ type: "setRepeatHours", hours }),
   };
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;

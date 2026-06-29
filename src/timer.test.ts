@@ -16,7 +16,6 @@ function makeTimer(overrides: Partial<TimerState> = {}): TimerState {
     durationMs: THIRTY_MIN,
     endsAt: null,
     status: "idle",
-    repeatHours: 8,
     repeatUntil: null,
     ...overrides,
   };

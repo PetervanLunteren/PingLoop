@@ -225,43 +225,6 @@ body {
   color: #fff;
 }
 
-.custom-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.custom-row input {
-  width: 96px;
-  text-align: center;
-  font: inherit;
-  font-size: 16px;
-  font-weight: 600;
-  padding: 9px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: #fff;
-  color: var(--text);
-}
-
-.custom-row input:focus {
-  outline: 2px solid var(--brand);
-  outline-offset: 1px;
-}
-
-/* Hide the number input spinners for a cleaner look. */
-.custom-row input::-webkit-outer-spin-button,
-.custom-row input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.custom-row span {
-  color: var(--muted);
-  font-size: 14px;
-}
-
 /* Buttons ----------------------------------------------------------------- */
 .btn {
   border: 1px solid var(--border);
