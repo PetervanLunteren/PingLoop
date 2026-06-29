@@ -16,7 +16,6 @@ function makeTimer(overrides: Partial<TimerState> = {}): TimerState {
     durationMs: THIRTY_MIN,
     endsAt: null,
     status: "idle",
-    repeat: false,
     repeatHours: 8,
     repeatUntil: null,
     ...overrides,
@@ -28,10 +27,6 @@ describe("start", () => {
     const t = start(makeTimer(), 1000);
     expect(t.status).toBe("running");
     expect(t.endsAt).toBe(1000 + THIRTY_MIN);
-  });
-
-  it("preserves the repeat setting", () => {
-    expect(start(makeTimer({ repeat: true }), 1000).repeat).toBe(true);
   });
 });
 

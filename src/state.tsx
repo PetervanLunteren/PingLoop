@@ -31,7 +31,8 @@ function alertFor(
     title: "Time for a break",
     // The worker swaps in a fresh suggestion per background ping; this is a fallback.
     body: pickSuggestion(),
-    repeat: timer.repeat,
+    // The timer always repeats; the server stops it once repeatUntil passes.
+    repeat: true,
     intervalMs: timer.durationMs,
     repeatUntil,
   };
@@ -40,7 +41,6 @@ function alertFor(
 type Action =
   | { type: "select"; durationMs: number }
   | { type: "toggle"; now: number }
-  | { type: "setRepeat"; repeat: boolean; now: number }
   | { type: "setRepeatHours"; hours: number }
   | { type: "restart"; now: number }
   | { type: "finish" };
@@ -51,20 +51,11 @@ function reducer(timer: TimerState, action: Action): TimerState {
       return setDuration(timer, action.durationMs);
     case "toggle":
       if (timer.status === "running") return stop(timer);
+      // The timer always repeats, bounded by the stop-after window.
       return {
         ...start(timer, action.now),
-        repeatUntil: timer.repeat ? action.now + timer.repeatHours * HOUR_MS : null,
+        repeatUntil: action.now + timer.repeatHours * HOUR_MS,
       };
-    case "setRepeat": {
-      const next: TimerState = { ...timer, repeat: action.repeat };
-      // A change mid-run sets or clears the session end immediately.
-      if (timer.status === "running") {
-        next.repeatUntil = action.repeat
-          ? action.now + timer.repeatHours * HOUR_MS
-          : null;
-      }
-      return next;
-    }
     case "setRepeatHours":
       return { ...timer, repeatHours: action.hours };
     case "restart":
@@ -80,7 +71,6 @@ interface Store {
   now: number;
   selectInterval: (durationMs: number) => void;
   toggle: () => void;
-  setRepeat: (repeat: boolean) => void;
   setRepeatHours: (hours: number) => void;
 }
 
@@ -107,8 +97,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isFinished(timer, now)) {
       playBeep();
-      const continuing =
-        timer.repeat && timer.repeatUntil !== null && now < timer.repeatUntil;
+      const continuing = timer.repeatUntil !== null && now < timer.repeatUntil;
       if (continuing) {
         void showNotification("Time for a break", pickSuggestion());
         dispatch({ type: "restart", now });
@@ -141,17 +130,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (wasRunning) {
         void cancelBackground();
       } else {
-        const repeatUntil = timer.repeat ? ts + timer.repeatHours * HOUR_MS : null;
+        const repeatUntil = ts + timer.repeatHours * HOUR_MS;
         void scheduleBackground(alertFor(timer, ts + timer.durationMs, repeatUntil));
-      }
-    },
-    setRepeat: (repeat) => {
-      const ts = Date.now();
-      dispatch({ type: "setRepeat", repeat, now: ts });
-      // If running, the pending background alert must reflect the new setting.
-      if (timer.status === "running" && timer.endsAt !== null) {
-        const repeatUntil = repeat ? ts + timer.repeatHours * HOUR_MS : null;
-        void scheduleBackground(alertFor({ ...timer, repeat }, timer.endsAt, repeatUntil));
       }
     },
     setRepeatHours: (hours) => dispatch({ type: "setRepeatHours", hours }),

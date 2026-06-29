@@ -16,7 +16,6 @@ export function loadTimer(): TimerState {
       durationMs: DEFAULT_DURATION_MS,
       endsAt: null,
       status: "idle",
-      repeat: false,
       repeatHours: DEFAULT_REPEAT_HOURS,
       repeatUntil: null,
     };
@@ -51,7 +50,6 @@ function isTimerState(value: unknown): value is TimerState {
     typeof v.durationMs === "number" &&
     (typeof v.endsAt === "number" || v.endsAt === null) &&
     (v.status === "idle" || v.status === "running" || v.status === "finished") &&
-    typeof v.repeat === "boolean" &&
     typeof v.repeatHours === "number" &&
     (typeof v.repeatUntil === "number" || v.repeatUntil === null)
   );

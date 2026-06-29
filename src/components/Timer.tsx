@@ -22,7 +22,7 @@ export function Timer({
   onRequestNotifications,
   onShowSetup,
 }: TimerProps) {
-  const { timer, now, selectInterval, toggle, setRepeat, setRepeatHours } = useStore();
+  const { timer, now, selectInterval, toggle, setRepeatHours } = useStore();
 
   const remaining = remainingAt(timer, now);
   const finished = timer.status === "finished";
@@ -100,35 +100,20 @@ export function Timer({
         })}
       </div>
 
-      <div className="repeat-row">
-        <span>Repeat</span>
-        <button
-          className={timer.repeat ? "switch on" : "switch"}
-          role="switch"
-          aria-checked={timer.repeat}
-          aria-label="Repeat the timer after it ends"
-          onClick={() => setRepeat(!timer.repeat)}
-        >
-          <span className="knob" />
-        </button>
+      <div className="custom-row">
+        <span>Repeat for</span>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={MAX_REPEAT_HOURS}
+          value={hoursText}
+          aria-label="Repeat for this many hours"
+          onChange={(e) => onHoursInput(e.target.value)}
+          onBlur={onHoursBlur}
+        />
+        <span>hours</span>
       </div>
-
-      {timer.repeat && (
-        <div className="custom-row">
-          <span>Stop after</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={MAX_REPEAT_HOURS}
-            value={hoursText}
-            aria-label="Stop repeating after this many hours"
-            onChange={(e) => onHoursInput(e.target.value)}
-            onBlur={onHoursBlur}
-          />
-          <span>hours</span>
-        </div>
-      )}
 
       <button className="btn btn-primary toggle" onClick={() => void handleToggle()}>
         {running ? "Stop" : "Start"}
