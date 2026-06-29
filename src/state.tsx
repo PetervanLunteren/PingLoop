@@ -16,22 +16,32 @@ import { isFinished, markFinished, setDuration, start, stop } from "./timer";
 import { showNotification } from "./notify";
 import { playBeep, unlockAudio } from "./sound";
 import { cancelBackground, scheduleBackground, type BackgroundAlert } from "./push";
+import { pickSuggestion } from "./suggestions";
+
+const HOUR_MS = 60 * 60 * 1000;
 
 /** Build the background alert for a timer ending at `fireAt`. */
-function alertFor(timer: TimerState, fireAt: number): BackgroundAlert {
+function alertFor(
+  timer: TimerState,
+  fireAt: number,
+  repeatUntil: number | null,
+): BackgroundAlert {
   return {
     fireAt,
-    title: "Timer finished",
-    body: timer.repeat ? "Starting the next round." : "Your countdown is done.",
+    title: "Time for a break",
+    // The worker swaps in a fresh suggestion per background ping; this is a fallback.
+    body: pickSuggestion(),
     repeat: timer.repeat,
     intervalMs: timer.durationMs,
+    repeatUntil,
   };
 }
 
 type Action =
   | { type: "select"; durationMs: number }
   | { type: "toggle"; now: number }
-  | { type: "setRepeat"; repeat: boolean }
+  | { type: "setRepeat"; repeat: boolean; now: number }
+  | { type: "setRepeatHours"; hours: number }
   | { type: "restart"; now: number }
   | { type: "finish" };
 
@@ -40,11 +50,23 @@ function reducer(timer: TimerState, action: Action): TimerState {
     case "select":
       return setDuration(timer, action.durationMs);
     case "toggle":
-      return timer.status === "running"
-        ? stop(timer)
-        : start(timer, action.now);
-    case "setRepeat":
-      return { ...timer, repeat: action.repeat };
+      if (timer.status === "running") return stop(timer);
+      return {
+        ...start(timer, action.now),
+        repeatUntil: timer.repeat ? action.now + timer.repeatHours * HOUR_MS : null,
+      };
+    case "setRepeat": {
+      const next: TimerState = { ...timer, repeat: action.repeat };
+      // A change mid-run sets or clears the session end immediately.
+      if (timer.status === "running") {
+        next.repeatUntil = action.repeat
+          ? action.now + timer.repeatHours * HOUR_MS
+          : null;
+      }
+      return next;
+    }
+    case "setRepeatHours":
+      return { ...timer, repeatHours: action.hours };
     case "restart":
       return start(timer, action.now);
     case "finish":
@@ -59,6 +81,7 @@ interface Store {
   selectInterval: (durationMs: number) => void;
   toggle: () => void;
   setRepeat: (repeat: boolean) => void;
+  setRepeatHours: (hours: number) => void;
 }
 
 const StoreContext = createContext<Store | null>(null);
@@ -84,13 +107,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isFinished(timer, now)) {
       playBeep();
-      if (timer.repeat) {
-        void showNotification("Timer finished", "Starting the next round.");
+      const continuing =
+        timer.repeat && timer.repeatUntil !== null && now < timer.repeatUntil;
+      if (continuing) {
+        void showNotification("Time for a break", pickSuggestion());
         dispatch({ type: "restart", now });
       } else {
-        void showNotification("Timer finished", "Your countdown is done.");
+        void showNotification("Time for a break", pickSuggestion());
         dispatch({ type: "finish" });
-        // We alerted in the foreground, so drop any pending background push.
+        // The repeat run is over (or it was a one-shot), so drop the background push.
         void cancelBackground();
       }
     }
@@ -116,16 +141,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (wasRunning) {
         void cancelBackground();
       } else {
-        void scheduleBackground(alertFor(timer, ts + timer.durationMs));
+        const repeatUntil = timer.repeat ? ts + timer.repeatHours * HOUR_MS : null;
+        void scheduleBackground(alertFor(timer, ts + timer.durationMs, repeatUntil));
       }
     },
     setRepeat: (repeat) => {
-      dispatch({ type: "setRepeat", repeat });
+      const ts = Date.now();
+      dispatch({ type: "setRepeat", repeat, now: ts });
       // If running, the pending background alert must reflect the new setting.
       if (timer.status === "running" && timer.endsAt !== null) {
-        void scheduleBackground(alertFor({ ...timer, repeat }, timer.endsAt));
+        const repeatUntil = repeat ? ts + timer.repeatHours * HOUR_MS : null;
+        void scheduleBackground(alertFor({ ...timer, repeat }, timer.endsAt, repeatUntil));
       }
     },
+    setRepeatHours: (hours) => dispatch({ type: "setRepeatHours", hours }),
   };
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;

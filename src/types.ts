@@ -13,4 +13,8 @@ export interface TimerState {
   status: TimerStatus;
   /** When true, the timer restarts itself right after it pings. */
   repeat: boolean;
+  /** How long a repeat run keeps going, in hours, so it never loops forever. */
+  repeatHours: number;
+  /** Absolute time a repeat run stops, set when a repeat timer starts. */
+  repeatUntil: number | null;
 }

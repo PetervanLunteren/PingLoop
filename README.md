@@ -1,12 +1,11 @@
 <p align="center">
-  <img src="docs/screenshot.png" alt="PingLoop running a 5 minute timer" width="320" />
+  <img src="docs/screenshot.png" alt="PingLoop with a 30 minute focus timer" width="320" />
 </p>
 
-A tiny countdown timer that pings you when the time is up.
+A tiny focus timer that pings me to take a break.
 
-I built it for a very specific reason: I keep forgetting to switch between standing
-and sitting at my desk, so I wanted something simple that would nudge me every
-so often. That's it. Pick a length, get a ping.
+I made it for myself. I work in 30 or 60 minute blocks, and when the time is up it
+nudges me to get up and do something else for a minute: water the plants, a lap through the garden, that kind of thing. Each ping suggests one.
 
 It was also a nice excuse to play with a few things I had not used much: installable
 PWAs, free Cloudflare Workers, and getting real notifications to show up on both my
@@ -15,5 +14,3 @@ iPhone and my desktop, even with the app closed, which was the tricky part.
 <p align="center">
   <a href="https://petervanlunteren.github.io/PingLoop/"><b>Give it a try →</b></a>
 </p>
-
-

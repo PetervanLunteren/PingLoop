@@ -22,6 +22,8 @@ export interface ScheduleInput {
   body: string;
   repeat: boolean;
   intervalMs: number;
+  /** Absolute time a repeat run stops, or null for a one-shot. */
+  repeatUntil: number | null;
 }
 
 /**
@@ -57,6 +59,11 @@ export function parseScheduleInput(value: unknown): ScheduleInput {
     throw new Error("intervalMs must be between 1 minute and 1 day when repeat is on");
   }
 
+  let repeatUntil: number | null = null;
+  if (root.repeatUntil !== null && root.repeatUntil !== undefined) {
+    repeatUntil = asFiniteNumber(root.repeatUntil, "repeatUntil");
+  }
+
   return {
     subscription: { endpoint, expirationTime: null, keys: { p256dh, auth } },
     fireAt,
@@ -64,6 +71,7 @@ export function parseScheduleInput(value: unknown): ScheduleInput {
     body,
     repeat,
     intervalMs,
+    repeatUntil,
   };
 }
 
@@ -76,6 +84,20 @@ export function nextFireAt(fireAt: number, intervalMs: number, now: number): num
   let next = fireAt + intervalMs;
   while (next <= now) next += intervalMs;
   return next;
+}
+
+/**
+ * How long a push stays valid at the push service (seconds). A too-short TTL is
+ * dropped when an idle phone does not check in quickly enough, which is the main
+ * reason a background ping goes missing. For repeats we keep it within one cycle
+ * so a delayed ping still lands before the next; one-shots get a wide window.
+ */
+export function pushTtlSeconds(intervalMs: number, repeat: boolean): number {
+  const interval = Math.round(intervalMs / 1000);
+  if (repeat) {
+    return Math.min(3600, Math.max(60, interval)); // 1 min .. 1 hour, near the cycle
+  }
+  return Math.min(21600, Math.max(1800, interval)); // 30 min .. 6 hours
 }
 
 function asObject(value: unknown, name: string): Record<string, unknown> {

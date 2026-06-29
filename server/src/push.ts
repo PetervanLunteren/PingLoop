@@ -17,6 +17,7 @@ export interface PushData {
 export async function sendPush(
   subscription: PushSubscription,
   data: PushData,
+  ttlSeconds: number,
   env: Env,
 ): Promise<number> {
   const vapid: VapidKeys = {
@@ -24,10 +25,10 @@ export async function sendPush(
     publicKey: env.VAPID_PUBLIC_KEY,
     privateKey: env.VAPID_PRIVATE_KEY,
   };
-  // ttl 60s: a timer alert that could not be delivered within a minute is stale,
-  // so let it expire rather than arrive much later.
+  // High urgency asks for prompt delivery; the TTL keeps the push alive long
+  // enough that an idle phone still gets it when it next checks in.
   const payload = await buildPushPayload(
-    { data: JSON.stringify(data), options: { ttl: 60, urgency: "high" } },
+    { data: JSON.stringify(data), options: { ttl: ttlSeconds, urgency: "high" } },
     subscription,
     vapid,
   );

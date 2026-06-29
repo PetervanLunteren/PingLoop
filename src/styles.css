@@ -201,6 +201,30 @@ body {
   font-size: clamp(32px, 10vw, 46px);
 }
 
+.intervals {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.interval {
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.interval.active {
+  background: var(--brand-gradient);
+  border: none;
+  color: #fff;
+}
+
 .custom-row {
   display: flex;
   align-items: center;

@@ -4,7 +4,13 @@
 
 import type { Env } from "./env";
 import { sendPush } from "./push";
-import { nextFireAt, parseScheduleInput, type ScheduleInput } from "./schedule";
+import {
+  nextFireAt,
+  parseScheduleInput,
+  pushTtlSeconds,
+  type ScheduleInput,
+} from "./schedule";
+import { pickSuggestion } from "./suggestions";
 
 const MAX_ATTEMPTS = 3;
 
@@ -18,6 +24,7 @@ interface ScheduleRow {
   body: string;
   repeat: number;
   interval_ms: number;
+  repeat_until: number | null;
   attempts: number;
 }
 
@@ -59,12 +66,13 @@ async function handleSchedule(request: Request, env: Env): Promise<Response> {
   const id = await hashEndpoint(input.subscription.endpoint);
   await env.DB.prepare(
     `INSERT INTO schedules
-       (id, endpoint, p256dh, auth, fire_at, title, body, repeat, interval_ms, attempts)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+       (id, endpoint, p256dh, auth, fire_at, title, body, repeat, interval_ms, repeat_until, attempts)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
      ON CONFLICT(id) DO UPDATE SET
        endpoint = excluded.endpoint, p256dh = excluded.p256dh, auth = excluded.auth,
        fire_at = excluded.fire_at, title = excluded.title, body = excluded.body,
-       repeat = excluded.repeat, interval_ms = excluded.interval_ms, attempts = 0`,
+       repeat = excluded.repeat, interval_ms = excluded.interval_ms,
+       repeat_until = excluded.repeat_until, attempts = 0`,
   )
     .bind(
       id,
@@ -76,6 +84,7 @@ async function handleSchedule(request: Request, env: Env): Promise<Response> {
       input.body,
       input.repeat ? 1 : 0,
       input.intervalMs,
+      input.repeatUntil,
     )
     .run();
 
@@ -105,9 +114,12 @@ async function fireRow(row: ScheduleRow, env: Env, now: number): Promise<void> {
     keys: { p256dh: row.p256dh, auth: row.auth },
   };
 
+  const ttl = pushTtlSeconds(row.interval_ms, row.repeat === 1);
+  // Pick a fresh break suggestion for each ping so a repeat run stays varied.
+  const data = { title: row.title, body: pickSuggestion() };
   let status: number;
   try {
-    status = await sendPush(subscription, { title: row.title, body: row.body }, env);
+    status = await sendPush(subscription, data, ttl, env);
   } catch (err) {
     status = 0; // network error, treat as a transient failure
     console.log(`push error host=${hostOf(row.endpoint)} err=${String(err)}`);
@@ -118,8 +130,14 @@ async function fireRow(row: ScheduleRow, env: Env, now: number): Promise<void> {
   const sent = status >= 200 && status < 300;
 
   if (sent && row.repeat === 1) {
+    const next = nextFireAt(row.fire_at, row.interval_ms, now);
+    // Stop the repeat run once it would pass its end time.
+    if (row.repeat_until !== null && next > row.repeat_until) {
+      await env.DB.prepare("DELETE FROM schedules WHERE id = ?").bind(row.id).run();
+      return;
+    }
     await env.DB.prepare("UPDATE schedules SET fire_at = ?, attempts = 0 WHERE id = ?")
-      .bind(nextFireAt(row.fire_at, row.interval_ms, now), row.id)
+      .bind(next, row.id)
       .run();
     return;
   }

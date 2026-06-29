@@ -17,6 +17,8 @@ function makeTimer(overrides: Partial<TimerState> = {}): TimerState {
     endsAt: null,
     status: "idle",
     repeat: false,
+    repeatHours: 8,
+    repeatUntil: null,
     ...overrides,
   };
 }
@@ -49,6 +51,17 @@ describe("setDuration", () => {
     expect(next.durationMs).toBe(5 * 60 * 1000);
     expect(next.status).toBe("idle");
     expect(next.endsAt).toBeNull();
+  });
+});
+
+describe("repeat window", () => {
+  it("start keeps the repeat end time (restart stays within the run)", () => {
+    expect(start(makeTimer({ repeatUntil: 5000 }), 0).repeatUntil).toBe(5000);
+  });
+
+  it("stop clears the repeat end time", () => {
+    const running = makeTimer({ status: "running", repeatUntil: 5000 });
+    expect(stop(running).repeatUntil).toBeNull();
   });
 });
 

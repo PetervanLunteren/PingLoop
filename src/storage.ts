@@ -4,9 +4,10 @@
 
 import type { TimerState } from "./types";
 
-const STORAGE_KEY = "pingloop:timer:v2";
+const STORAGE_KEY = "pingloop:timer:v3";
 
 const DEFAULT_DURATION_MS = 30 * 60 * 1000;
+const DEFAULT_REPEAT_HOURS = 8;
 
 export function loadTimer(): TimerState {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -16,6 +17,8 @@ export function loadTimer(): TimerState {
       endsAt: null,
       status: "idle",
       repeat: false,
+      repeatHours: DEFAULT_REPEAT_HOURS,
+      repeatUntil: null,
     };
   }
 
@@ -48,6 +51,8 @@ function isTimerState(value: unknown): value is TimerState {
     typeof v.durationMs === "number" &&
     (typeof v.endsAt === "number" || v.endsAt === null) &&
     (v.status === "idle" || v.status === "running" || v.status === "finished") &&
-    typeof v.repeat === "boolean"
+    typeof v.repeat === "boolean" &&
+    typeof v.repeatHours === "number" &&
+    (typeof v.repeatUntil === "number" || v.repeatUntil === null)
   );
 }

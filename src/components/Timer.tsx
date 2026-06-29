@@ -4,7 +4,8 @@ import { remainingAt } from "../timer";
 import { formatDuration } from "../format";
 import { isIOS, isStandalone } from "../notify";
 
-const MAX_CUSTOM_MIN = 600;
+const PRESETS_MIN = [30, 60];
+const MAX_REPEAT_HOURS = 24;
 
 // Ring geometry. The radius drives the dash length below.
 const RADIUS = 45;
@@ -21,27 +22,24 @@ export function Timer({
   onRequestNotifications,
   onShowSetup,
 }: TimerProps) {
-  const { timer, now, selectInterval, toggle, setRepeat } = useStore();
+  const { timer, now, selectInterval, toggle, setRepeat, setRepeatHours } = useStore();
 
   const remaining = remainingAt(timer, now);
   const finished = timer.status === "finished";
   const running = timer.status === "running";
   const fraction = timer.durationMs > 0 ? remaining / timer.durationMs : 0;
 
-  // The minutes input is the only length control, pre-filled from the saved
-  // duration and remembered across reloads via the store's persistence.
-  const [text, setText] = useState(() => String(Math.round(timer.durationMs / 60000)));
+  // "Stop after" hours, shown only when Repeat is on.
+  const [hoursText, setHoursText] = useState(() => String(timer.repeatHours));
 
-  function onInput(value: string) {
-    setText(value);
-    const minutes = clampMinutes(value);
-    if (minutes) selectInterval(minutes * 60000);
+  function onHoursInput(value: string) {
+    setHoursText(value);
+    const hours = clampHours(value);
+    if (hours) setRepeatHours(hours);
   }
 
-  function onBlur() {
-    if (!clampMinutes(text)) {
-      setText(String(Math.round(timer.durationMs / 60000)));
-    }
+  function onHoursBlur() {
+    if (!clampHours(hoursText)) setHoursText(String(timer.repeatHours));
   }
 
   // Starting a timer with notifications off means it cannot reach you when
@@ -86,18 +84,20 @@ export function Timer({
         </div>
       </div>
 
-      <div className="custom-row">
-        <input
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={MAX_CUSTOM_MIN}
-          value={text}
-          aria-label="Minutes"
-          onChange={(e) => onInput(e.target.value)}
-          onBlur={onBlur}
-        />
-        <span>minutes</span>
+      <div className="intervals" role="group" aria-label="Focus length">
+        {PRESETS_MIN.map((min) => {
+          const ms = min * 60 * 1000;
+          return (
+            <button
+              key={min}
+              className={timer.durationMs === ms ? "interval active" : "interval"}
+              aria-pressed={timer.durationMs === ms}
+              onClick={() => selectInterval(ms)}
+            >
+              {min} min
+            </button>
+          );
+        })}
       </div>
 
       <div className="repeat-row">
@@ -113,6 +113,23 @@ export function Timer({
         </button>
       </div>
 
+      {timer.repeat && (
+        <div className="custom-row">
+          <span>Stop after</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={MAX_REPEAT_HOURS}
+            value={hoursText}
+            aria-label="Stop repeating after this many hours"
+            onChange={(e) => onHoursInput(e.target.value)}
+            onBlur={onHoursBlur}
+          />
+          <span>hours</span>
+        </div>
+      )}
+
       <button className="btn btn-primary toggle" onClick={() => void handleToggle()}>
         {running ? "Stop" : "Start"}
       </button>
@@ -120,9 +137,9 @@ export function Timer({
   );
 }
 
-/** Parse a minutes string to a clamped integer, or 0 when invalid. */
-function clampMinutes(value: string): number {
+/** Parse an hours string to a clamped integer, or 0 when invalid. */
+function clampHours(value: string): number {
   const n = Math.floor(Number(value));
   if (!Number.isFinite(n) || n < 1) return 0;
-  return Math.min(MAX_CUSTOM_MIN, n);
+  return Math.min(MAX_REPEAT_HOURS, n);
 }

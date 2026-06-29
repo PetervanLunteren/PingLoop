@@ -10,17 +10,17 @@ export function start(timer: TimerState, now: number): TimerState {
 
 /** Turn the timer off and return it to the full interval, ready to start. */
 export function stop(timer: TimerState): TimerState {
-  return { ...timer, status: "idle", endsAt: null };
+  return { ...timer, status: "idle", endsAt: null, repeatUntil: null };
 }
 
 /** Choose a new interval. This also turns the timer off. */
 export function setDuration(timer: TimerState, durationMs: number): TimerState {
-  return { ...timer, durationMs, status: "idle", endsAt: null };
+  return { ...timer, durationMs, status: "idle", endsAt: null, repeatUntil: null };
 }
 
 /** Mark the timer finished. Used when it reaches zero. */
 export function markFinished(timer: TimerState): TimerState {
-  return { ...timer, status: "finished", endsAt: null };
+  return { ...timer, status: "finished", endsAt: null, repeatUntil: null };
 }
 
 /**

@@ -17,6 +17,8 @@ export interface BackgroundAlert {
   body: string;
   repeat: boolean;
   intervalMs: number;
+  /** Absolute time a repeat run stops, so the server stops rescheduling it. */
+  repeatUntil: number | null;
 }
 
 /** Register (or update) a background alert for the running timer. */
@@ -30,6 +32,7 @@ export async function scheduleBackground(alert: BackgroundAlert): Promise<void> 
     body: alert.body,
     repeat: alert.repeat,
     intervalMs: alert.intervalMs,
+    repeatUntil: alert.repeatUntil,
   });
 }
 
