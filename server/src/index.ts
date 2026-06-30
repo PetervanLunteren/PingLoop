@@ -51,6 +51,7 @@ export default {
     )
       .bind(now)
       .all<ScheduleRow>();
+    console.log(`cron ${iso(now)} due=${due.results.length}`);
     await Promise.all(due.results.map((row) => fireRow(row, env, now)));
   },
 };
@@ -117,14 +118,20 @@ async function fireRow(row: ScheduleRow, env: Env, now: number): Promise<void> {
   const ttl = pushTtlSeconds(row.interval_ms, row.repeat === 1);
   // Pick a fresh break suggestion for each ping so a repeat run stays varied.
   const data = { title: row.title, body: pickSuggestion() };
+  const lateMs = now - row.fire_at;
   let status: number;
   try {
     status = await sendPush(subscription, data, ttl, env);
   } catch (err) {
     status = 0; // network error, treat as a transient failure
-    console.log(`push error host=${hostOf(row.endpoint)} err=${String(err)}`);
+    console.log(`  send ERROR host=${hostOf(row.endpoint)} err=${String(err)}`);
   }
-  console.log(`push host=${hostOf(row.endpoint)} status=${status} repeat=${row.repeat}`);
+  // The key line to watch: when we sent, the status the push service gave, the
+  // ping it was for (and how late the cron was), the TTL, and the suggestion.
+  console.log(
+    `  send host=${hostOf(row.endpoint)} status=${status} for=${iso(row.fire_at)}` +
+      ` late=${Math.round(lateMs / 1000)}s ttl=${ttl}s repeat=${row.repeat} body="${data.body}"`,
+  );
 
   const gone = status === 404 || status === 410;
   const sent = status >= 200 && status < 300;
@@ -134,21 +141,30 @@ async function fireRow(row: ScheduleRow, env: Env, now: number): Promise<void> {
     // Stop the repeat run once it would pass its end time.
     if (row.repeat_until !== null && next > row.repeat_until) {
       await env.DB.prepare("DELETE FROM schedules WHERE id = ?").bind(row.id).run();
+      console.log(`  -> repeat window over, stopped`);
       return;
     }
     await env.DB.prepare("UPDATE schedules SET fire_at = ?, attempts = 0 WHERE id = ?")
       .bind(next, row.id)
       .run();
+    console.log(`  -> next ${iso(next)}`);
     return;
   }
   if (sent || gone || row.attempts + 1 >= MAX_ATTEMPTS) {
     await env.DB.prepare("DELETE FROM schedules WHERE id = ?").bind(row.id).run();
+    console.log(`  -> removed (${gone ? "subscription gone" : sent ? "one-shot done" : "gave up"})`);
     return;
   }
   // Transient failure: leave fire_at so the next cron retries, bump attempts.
   await env.DB.prepare("UPDATE schedules SET attempts = attempts + 1 WHERE id = ?")
     .bind(row.id)
     .run();
+  console.log(`  -> transient, will retry (attempt ${row.attempts + 1})`);
+}
+
+/** Short UTC time for logs, e.g. 13:16:20. */
+function iso(ms: number): string {
+  return new Date(ms).toISOString().slice(11, 19);
 }
 
 function hostOf(url: string): string {

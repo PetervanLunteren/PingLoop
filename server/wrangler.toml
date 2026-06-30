@@ -12,6 +12,10 @@ compatibility_flags = ["nodejs_compat"]
 [triggers]
 crons = ["* * * * *"]
 
+# Keep logs so we can review the last few hours in the dashboard, not just live.
+[observability]
+enabled = true
+
 [[d1_databases]]
 binding = "DB"
 database_name = "pingloop"
