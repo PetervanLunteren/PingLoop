@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  isCatchUp,
   isFinished,
   markFinished,
   remainingAt,
@@ -45,6 +46,22 @@ describe("setDuration", () => {
     expect(next.durationMs).toBe(5 * 60 * 1000);
     expect(next.status).toBe("idle");
     expect(next.endsAt).toBeNull();
+  });
+});
+
+describe("isCatchUp", () => {
+  it("is false for a live finish caught within the threshold", () => {
+    const running = start(makeTimer(), 0); // endsAt = THIRTY_MIN
+    expect(isCatchUp(running, THIRTY_MIN + 800, 3000)).toBe(false);
+  });
+
+  it("is true for a finish noticed well after it was due", () => {
+    const running = start(makeTimer(), 0);
+    expect(isCatchUp(running, THIRTY_MIN + 60_000, 3000)).toBe(true);
+  });
+
+  it("is false when not running (no end time)", () => {
+    expect(isCatchUp(makeTimer(), 10 ** 12, 3000)).toBe(false);
   });
 });
 

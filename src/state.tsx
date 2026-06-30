@@ -12,7 +12,7 @@ import {
 } from "react";
 import type { TimerState } from "./types";
 import { loadTimer, saveTimer } from "./storage";
-import { isFinished, markFinished, setDuration, start, stop } from "./timer";
+import { isCatchUp, isFinished, markFinished, setDuration, start, stop } from "./timer";
 import { showNotification } from "./notify";
 import { playBeep, unlockAudio } from "./sound";
 import { cancelBackground, scheduleBackground, type BackgroundAlert } from "./push";
@@ -21,6 +21,9 @@ import { pickSuggestion } from "./suggestions";
 const HOUR_MS = 60 * 60 * 1000;
 // A run keeps repeating for this long, then stops on its own.
 const REPEAT_HOURS = 8;
+// A finish detected more than this late was missed while the app slept, so the
+// background push already handled it and the app should not alert again.
+const CATCH_UP_MS = 3000;
 
 /** Build the background alert for a timer ending at `fireAt`. */
 function alertFor(
@@ -90,17 +93,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     saveTimer(timer);
   }, [timer]);
 
-  // The scheduler: when the running timer reaches zero, mark it finished and
-  // raise one notification plus one sound. Marking state prevents a re-fire.
+  // The scheduler: when the running timer reaches zero, alert once and re-sync.
   useEffect(() => {
     if (isFinished(timer, now)) {
-      playBeep();
+      // A finish detected well after the fact means the app was asleep and the
+      // background push already alerted, so re-sync silently instead of firing a
+      // duplicate. A live finish is caught within a tick (~1s).
+      if (!isCatchUp(timer, now, CATCH_UP_MS)) {
+        playBeep();
+        void showNotification("Time for a break", pickSuggestion());
+      }
+
       const continuing = timer.repeatUntil !== null && now < timer.repeatUntil;
       if (continuing) {
-        void showNotification("Time for a break", pickSuggestion());
         dispatch({ type: "restart", now });
       } else {
-        void showNotification("Time for a break", pickSuggestion());
         dispatch({ type: "finish" });
         // The repeat run is over (or it was a one-shot), so drop the background push.
         void cancelBackground();

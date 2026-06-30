@@ -44,3 +44,12 @@ export function isFinished(timer: TimerState, now: number): boolean {
     now >= timer.endsAt
   );
 }
+
+/**
+ * True when a finish was noticed well after it was due, which means the app was
+ * asleep and a background push already handled the alert. A live finish is
+ * caught within a tick (about a second).
+ */
+export function isCatchUp(timer: TimerState, now: number, thresholdMs: number): boolean {
+  return timer.endsAt !== null && now - timer.endsAt > thresholdMs;
+}
