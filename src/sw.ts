@@ -43,14 +43,10 @@ precacheAndRoute(manifest);
 async function handlePush(event: PushEvent): Promise<void> {
   const { title, body } = readPushData(event);
 
-  // If a window is open and visible, the in-app loop already alerts the user
-  // (with sound), so showing the push too would be a duplicate. Skip it then.
-  const windows = await self.clients.matchAll({
-    type: "window",
-    includeUncontrolled: true,
-  });
-  if (windows.some((client) => client.visibilityState === "visible")) return;
-
+  // Always show something. A push that shows no notification breaks the
+  // userVisibleOnly promise we made when subscribing, and iOS answers that by
+  // throttling or dropping later pushes. The app therefore stays quiet and lets
+  // this be the only notifier.
   await self.registration.showNotification(title, {
     body,
     icon: "pwa-192x192.png",

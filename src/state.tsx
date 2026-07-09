@@ -15,7 +15,12 @@ import { loadTimer, saveTimer } from "./storage";
 import { isCatchUp, isFinished, markFinished, setDuration, start, stop } from "./timer";
 import { showNotification } from "./notify";
 import { playBeep, unlockAudio } from "./sound";
-import { cancelBackground, scheduleBackground, type BackgroundAlert } from "./push";
+import {
+  cancelBackground,
+  pushEnabled,
+  scheduleBackground,
+  type BackgroundAlert,
+} from "./push";
 import { pickSuggestion } from "./suggestions";
 
 const HOUR_MS = 60 * 60 * 1000;
@@ -96,12 +101,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // The scheduler: when the running timer reaches zero, alert once and re-sync.
   useEffect(() => {
     if (isFinished(timer, now)) {
-      // A finish detected well after the fact means the app was asleep and the
-      // background push already alerted, so re-sync silently instead of firing a
-      // duplicate. A live finish is caught within a tick (~1s).
+      // A finish detected well after the fact means the app was asleep, so do
+      // not sound off for a stale ping. A live finish is caught within a tick.
       if (!isCatchUp(timer, now, CATCH_UP_MS)) {
         playBeep();
-        void showNotification("Time for a break", pickSuggestion());
+        // The service worker shows a notification for every push, so with a
+        // backend the app must stay quiet or you get two. Without one, the app
+        // is the only notifier.
+        if (!pushEnabled) {
+          void showNotification("Time for a break", pickSuggestion());
+        }
       }
 
       const continuing = timer.repeatUntil !== null && now < timer.repeatUntil;
