@@ -26,8 +26,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-        # Optional: set these repo variables to enable background push.
-        # Leave them unset for a foreground-only timer.
+        # Required. The worker keeps the timer, so without these the app loads
+        # to an error instead of a countdown.
         env:
           VITE_PUSH_API: ${{ vars.VITE_PUSH_API }}
           VITE_VAPID_PUBLIC_KEY: ${{ vars.VITE_VAPID_PUBLIC_KEY }}

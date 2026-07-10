@@ -1,16 +1,11 @@
-// A single Kubus-style countdown timer: pick an interval, toggle it on and off.
-
-export type TimerStatus = "idle" | "running" | "finished";
-
 /**
- * The whole app state. `durationMs` is the selected interval (and doubles as the
- * last-used default, since it is persisted). While running, `endsAt` is the
- * absolute finish time so the countdown survives a reload.
+ * A run, as the worker defines it. Pings happen on the grid
+ * `fireAt + k * intervalMs`, and the run stops at `until`.
+ *
+ * The worker owns this. The app only reads it and draws a countdown.
  */
-export interface TimerState {
-  durationMs: number;
-  endsAt: number | null;
-  status: TimerStatus;
-  /** Absolute time the run stops, set when the timer starts. */
-  repeatUntil: number | null;
+export interface Schedule {
+  fireAt: number;
+  intervalMs: number;
+  until: number;
 }

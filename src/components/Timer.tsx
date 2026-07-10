@@ -1,5 +1,5 @@
 import { useStore } from "../state";
-import { remainingAt } from "../timer";
+import { isRunning, remainingMs } from "../schedule";
 import { formatDuration } from "../format";
 import { isIOS, isStandalone } from "../notify";
 
@@ -20,28 +20,25 @@ export function Timer({
   onRequestNotifications,
   onShowSetup,
 }: TimerProps) {
-  const { timer, now, selectInterval, toggle } = useStore();
+  const { schedule, intervalMs, status, error, now, selectInterval, start, stop, refresh } =
+    useStore();
 
-  const remaining = remainingAt(timer, now);
-  const finished = timer.status === "finished";
-  const running = timer.status === "running";
-  const fraction = timer.durationMs > 0 ? remaining / timer.durationMs : 0;
+  const running = isRunning(schedule, now);
+  const remaining = remainingMs(schedule, now, intervalMs);
+  const fraction = intervalMs > 0 ? remaining / intervalMs : 0;
+  const busy = status === "loading";
 
-  // Starting a timer with notifications off means it cannot reach you when
-  // closed, so sort that out first.
-  async function handleToggle() {
-    const starting = timer.status !== "running";
-    if (starting && !notificationsGranted) {
-      // On iOS, notifications only work from the installed app, so a Safari tab
-      // can never ping. Show the install steps and do not start.
+  // A timer that cannot ping is pointless, so notifications come first. On iOS
+  // they only work from the installed app, so send the user there instead.
+  async function handleStart() {
+    if (!notificationsGranted) {
       if (isIOS() && !isStandalone()) {
         onShowSetup();
         return;
       }
-      // Elsewhere a tab can notify, so just ask for permission.
       await onRequestNotifications();
     }
-    toggle();
+    await start();
   }
 
   return (
@@ -64,9 +61,7 @@ export function Timer({
             strokeDashoffset={CIRCUMFERENCE * (1 - fraction)}
           />
         </svg>
-        <div className={finished ? "dial-time finished" : "dial-time"}>
-          {finished ? "Done" : formatDuration(remaining)}
-        </div>
+        <div className="dial-time">{formatDuration(remaining)}</div>
       </div>
 
       <div className="intervals" role="group" aria-label="Focus length">
@@ -75,8 +70,9 @@ export function Timer({
           return (
             <button
               key={min}
-              className={timer.durationMs === ms ? "interval active" : "interval"}
-              aria-pressed={timer.durationMs === ms}
+              className={intervalMs === ms ? "interval active" : "interval"}
+              aria-pressed={intervalMs === ms}
+              disabled={running || busy}
               onClick={() => selectInterval(ms)}
             >
               {min} min
@@ -85,7 +81,20 @@ export function Timer({
         })}
       </div>
 
-      <button className="btn btn-primary toggle" onClick={() => void handleToggle()}>
+      {error && (
+        <p className="banner">
+          {error}{" "}
+          <button className="banner-retry" onClick={() => void refresh()}>
+            Retry
+          </button>
+        </p>
+      )}
+
+      <button
+        className="btn btn-primary toggle"
+        disabled={busy}
+        onClick={() => void (running ? stop() : handleStart())}
+      >
         {running ? "Stop" : "Start"}
       </button>
     </section>

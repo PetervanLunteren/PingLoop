@@ -5,8 +5,6 @@ import {
   showNotification,
   type NotificationSupport,
 } from "../notify";
-import { playBeep, unlockAudio } from "../sound";
-import { pushEnabled } from "../push";
 
 /**
  * Opened from the header bell. Kept deliberately short: turn notifications on
@@ -23,13 +21,10 @@ export function NotificationDialog({
   onClose: () => void;
 }) {
   async function enable() {
-    unlockAudio();
     setStatus(await requestPermission());
   }
 
   function testPing() {
-    unlockAudio();
-    playBeep();
     void showNotification("Test ping", "PingLoop is working.");
   }
 
@@ -53,10 +48,11 @@ export function NotificationDialog({
 
         {status !== "granted" && <EnableBlock status={status} onEnable={enable} />}
 
-        {pushEnabled && status === "granted" && (
+        {status === "granted" && (
           <p className="note">
-            Background alerts are on. Your timer's end time is sent to the alert
-            server so it can reach you with the app closed.
+            Pings are sent from the ping server, so they reach you with the app
+            closed. One arrives within about five minutes of its slot, or not at
+            all.
           </p>
         )}
 
@@ -86,9 +82,8 @@ function EnableBlock({
     return (
       <>
         <p className="note">
-          {pushEnabled
-            ? "Turn on notifications so the timer can alert you, even when PingLoop is closed."
-            : "Turn on notifications so the timer can alert you."}
+          Turn on notifications so the timer can alert you, even when PingLoop is
+          closed.
         </p>
         <button className="btn btn-primary btn-sm dialog-action" onClick={onEnable}>
           Turn on notifications
@@ -116,7 +111,7 @@ function EnableBlock({
   }
   return (
     <p className="note">
-      This browser cannot show notifications. The timer still plays a sound.
+      This browser cannot show notifications, so PingLoop cannot ping you here.
     </p>
   );
 }

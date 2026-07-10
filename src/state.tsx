@@ -1,153 +1,98 @@
-// The single source of truth: a reducer over one timer, persisted to
-// localStorage, plus one loop that fires a notification and sound when it
-// finishes while the app is open.
+// The app is a remote control for the worker's timer. It holds the run it last
+// read from the server, a one-second clock so the countdown ticks, and nothing
+// else. No timer engine, no notifications, no re-syncing: the worker owns all of
+// that, and the push notification is the only alert.
 
 import {
   createContext,
   useContext,
   useEffect,
-  useReducer,
   useState,
   type ReactNode,
 } from "react";
-import type { TimerState } from "./types";
-import { loadTimer, saveTimer } from "./storage";
-import { isCatchUp, isFinished, markFinished, setDuration, start, stop } from "./timer";
-import { showNotification } from "./notify";
-import { playBeep, unlockAudio } from "./sound";
-import {
-  cancelBackground,
-  pushEnabled,
-  scheduleBackground,
-  type BackgroundAlert,
-} from "./push";
-import { pickSuggestion } from "./suggestions";
+import type { Schedule } from "./types";
+import { getSchedule, startSchedule, stopSchedule } from "./api";
+import { isRunning } from "./schedule";
+import { loadIntervalPref, saveIntervalPref } from "./storage";
 
-const HOUR_MS = 60 * 60 * 1000;
-// A run keeps repeating for this long, then stops on its own.
-const REPEAT_HOURS = 8;
-// A finish detected more than this late was missed while the app slept, so the
-// background push already handled it and the app should not alert again.
-const CATCH_UP_MS = 3000;
-
-/** Build the background alert for a timer ending at `fireAt`. */
-function alertFor(
-  timer: TimerState,
-  fireAt: number,
-  repeatUntil: number | null,
-): BackgroundAlert {
-  return {
-    fireAt,
-    title: "Time for a break",
-    // The worker swaps in a fresh suggestion per background ping; this is a fallback.
-    body: pickSuggestion(),
-    // The timer always repeats; the server stops it once repeatUntil passes.
-    repeat: true,
-    intervalMs: timer.durationMs,
-    repeatUntil,
-  };
-}
-
-type Action =
-  | { type: "select"; durationMs: number }
-  | { type: "toggle"; now: number }
-  | { type: "restart"; now: number }
-  | { type: "finish" };
-
-function reducer(timer: TimerState, action: Action): TimerState {
-  switch (action.type) {
-    case "select":
-      return setDuration(timer, action.durationMs);
-    case "toggle":
-      if (timer.status === "running") return stop(timer);
-      // The timer always repeats, bounded by the repeat window.
-      return {
-        ...start(timer, action.now),
-        repeatUntil: action.now + REPEAT_HOURS * HOUR_MS,
-      };
-    case "restart":
-      return start(timer, action.now);
-    case "finish":
-      return markFinished(timer);
-  }
-}
+type Status = "loading" | "ready" | "error";
 
 interface Store {
-  timer: TimerState;
+  schedule: Schedule | null;
+  /** The interval to use when nothing is running, remembered across visits. */
+  intervalMs: number;
+  status: Status;
+  error: string | null;
   /** Current time in epoch ms, refreshed every second for the live countdown. */
   now: number;
-  selectInterval: (durationMs: number) => void;
-  toggle: () => void;
+  selectInterval: (intervalMs: number) => void;
+  start: () => Promise<void>;
+  stop: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const StoreContext = createContext<Store | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [timer, dispatch] = useReducer(reducer, undefined, loadTimer);
+  const [schedule, setSchedule] = useState<Schedule | null>(null);
+  const [intervalMs, setIntervalMs] = useState(() => loadIntervalPref());
+  const [status, setStatus] = useState<Status>("loading");
+  const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(() => Date.now());
 
-  // One global clock drives the countdown and the finish check.
+  // One clock, only so the countdown re-renders. It decides nothing.
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  // Persist on every change. A running timer does not mutate state each second
-  // (its countdown is derived), so this stays cheap.
-  useEffect(() => {
-    saveTimer(timer);
-  }, [timer]);
-
-  // The scheduler: when the running timer reaches zero, alert once and re-sync.
-  useEffect(() => {
-    if (isFinished(timer, now)) {
-      // A finish detected well after the fact means the app was asleep, so do
-      // not sound off for a stale ping. A live finish is caught within a tick.
-      if (!isCatchUp(timer, now, CATCH_UP_MS)) {
-        playBeep();
-        // The service worker shows a notification for every push, so with a
-        // backend the app must stay quiet or you get two. Without one, the app
-        // is the only notifier.
-        if (!pushEnabled) {
-          void showNotification("Time for a break", pickSuggestion());
-        }
-      }
-
-      const continuing = timer.repeatUntil !== null && now < timer.repeatUntil;
-      if (continuing) {
-        dispatch({ type: "restart", now });
-      } else {
-        dispatch({ type: "finish" });
-        // The repeat run is over (or it was a one-shot), so drop the background push.
-        void cancelBackground();
-      }
+  async function run(action: () => Promise<void>): Promise<void> {
+    setError(null);
+    try {
+      await action();
+      setStatus("ready");
+    } catch (err) {
+      setStatus("error");
+      setError(err instanceof Error ? err.message : String(err));
     }
-  }, [now, timer]);
+  }
+
+  async function refresh(): Promise<void> {
+    await run(async () => {
+      setSchedule(await getSchedule());
+    });
+  }
+
+  // Read the run from the worker on open. It is the only source of truth.
+  useEffect(() => {
+    void refresh();
+    // Mount only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const store: Store = {
-    timer,
+    schedule,
+    // A live run dictates the interval. Once it is over, fall back to the
+    // preference, so the pills and Start never disagree about the length.
+    intervalMs: isRunning(schedule, now) && schedule ? schedule.intervalMs : intervalMs,
+    status,
+    error,
     now,
-    selectInterval: (durationMs) => {
-      const wasRunning = timer.status === "running";
-      dispatch({ type: "select", durationMs });
-      // Choosing a new length stops the timer, so drop any background alert.
-      if (wasRunning) void cancelBackground();
+    selectInterval: (next) => {
+      setIntervalMs(next);
+      saveIntervalPref(next);
     },
-    toggle: () => {
-      unlockAudio();
-      // Use one timestamp for both the new end time and the display clock, so
-      // the countdown starts exactly at the full interval with no lag jump.
-      const ts = Date.now();
-      setNow(ts);
-      const wasRunning = timer.status === "running";
-      dispatch({ type: "toggle", now: ts });
-      if (wasRunning) {
-        void cancelBackground();
-      } else {
-        const repeatUntil = ts + REPEAT_HOURS * HOUR_MS;
-        void scheduleBackground(alertFor(timer, ts + timer.durationMs, repeatUntil));
-      }
-    },
+    start: () =>
+      run(async () => {
+        setSchedule(await startSchedule(intervalMs));
+        setNow(Date.now());
+      }),
+    stop: () =>
+      run(async () => {
+        await stopSchedule();
+        setSchedule(null);
+      }),
+    refresh,
   };
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>;

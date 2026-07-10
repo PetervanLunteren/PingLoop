@@ -196,11 +196,6 @@ body {
   letter-spacing: 0.5px;
 }
 
-.dial-time.finished {
-  color: var(--brand);
-  font-size: clamp(32px, 10vw, 46px);
-}
-
 .intervals {
   display: flex;
   gap: 10px;
@@ -223,6 +218,34 @@ body {
   background: var(--brand-gradient);
   border: none;
   color: #fff;
+}
+
+.interval:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* Shown when the ping server cannot be reached, or refuses to start a run. */
+.banner {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: #fdf0f0;
+  border: 1px solid #f2cdcd;
+  color: #8a2b2b;
+  font-size: 14px;
+  text-align: center;
+}
+
+.banner-retry {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 /* Buttons ----------------------------------------------------------------- */

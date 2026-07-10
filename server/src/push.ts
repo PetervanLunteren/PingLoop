@@ -8,6 +8,14 @@ import {
 } from "@block65/webcrypto-web-push";
 import type { Env } from "./env";
 
+/**
+ * How long a push stays valid at the push service. Apple queues pushes for a
+ * sleeping phone and delivers them when it next checks in, so a long expiry
+ * means stale pings arrive late and in clumps. Four minutes plus the one minute
+ * cron means a ping lands within about five minutes of its slot, or not at all.
+ */
+export const PUSH_TTL_SECONDS = 240;
+
 export interface PushData {
   title: string;
   body: string;
@@ -17,7 +25,6 @@ export interface PushData {
 export async function sendPush(
   subscription: PushSubscription,
   data: PushData,
-  ttlSeconds: number,
   env: Env,
 ): Promise<number> {
   const vapid: VapidKeys = {
@@ -25,10 +32,9 @@ export async function sendPush(
     publicKey: env.VAPID_PUBLIC_KEY,
     privateKey: env.VAPID_PRIVATE_KEY,
   };
-  // High urgency asks for prompt delivery; the TTL keeps the push alive long
-  // enough that an idle phone still gets it when it next checks in.
+  // High urgency asks Apple to deliver promptly; it is the only other knob.
   const payload = await buildPushPayload(
-    { data: JSON.stringify(data), options: { ttl: ttlSeconds, urgency: "high" } },
+    { data: JSON.stringify(data), options: { ttl: PUSH_TTL_SECONDS, urgency: "high" } },
     subscription,
     vapid,
   );

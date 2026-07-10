@@ -1,53 +1,28 @@
-// localStorage persistence for the single timer. Following the repo conventions
-// we crash loudly on corrupt data rather than silently resetting it. A first run
-// with no saved data returns the default interval.
+// The only thing worth keeping on the device: which interval you last picked.
+// The run itself lives on the worker, so there is nothing else to persist.
+// Following the repo conventions we crash loudly on corrupt data rather than
+// silently resetting it.
 
-import type { TimerState } from "./types";
+const STORAGE_KEY = "pingloop:pref:v1";
 
-const STORAGE_KEY = "pingloop:timer:v3";
+export const DEFAULT_INTERVAL_MS = 30 * 60 * 1000;
 
-const DEFAULT_DURATION_MS = 30 * 60 * 1000;
-
-export function loadTimer(): TimerState {
+export function loadIntervalPref(): number {
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw === null) {
-    return {
-      durationMs: DEFAULT_DURATION_MS,
-      endsAt: null,
-      status: "idle",
-      repeatUntil: null,
-    };
-  }
+  if (raw === null) return DEFAULT_INTERVAL_MS;
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(raw);
-  } catch (err) {
-    throw new Error(`PingLoop saved data could not be parsed: ${String(err)}`);
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value <= 0) {
+    throw new Error(`PingLoop saved interval is not a positive number: "${raw}"`);
   }
-
-  if (!isTimerState(parsed)) {
-    throw new Error("PingLoop saved data has an unexpected shape");
-  }
-  return parsed;
+  return value;
 }
 
-export function saveTimer(timer: TimerState): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(timer));
+export function saveIntervalPref(intervalMs: number): void {
+  localStorage.setItem(STORAGE_KEY, String(intervalMs));
 }
 
 /** Wipe saved data. Used by the error screen to recover from bad data. */
 export function clearState(): void {
   localStorage.removeItem(STORAGE_KEY);
-}
-
-function isTimerState(value: unknown): value is TimerState {
-  if (typeof value !== "object" || value === null) return false;
-  const v = value as Record<string, unknown>;
-  return (
-    typeof v.durationMs === "number" &&
-    (typeof v.endsAt === "number" || v.endsAt === null) &&
-    (v.status === "idle" || v.status === "running" || v.status === "finished") &&
-    (typeof v.repeatUntil === "number" || v.repeatUntil === null)
-  );
 }
